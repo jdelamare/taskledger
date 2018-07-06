@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+
+message Item {
+
+  // name of item, used as identifier
+  string name = 2;
+
+  // A human readable description of the item
+  string description = 3;
+
+  // Unix UTC timestamp of approximately when this agent was registered
+  uint64 timestamp = 4;
+
+  // current status of item
+  bool is_done = 5;
+}

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+message Payload {
+  enum Action {
+    CREATE_ITEM = 0;
+    EDIT_DESCRIPTION = 1;
+    SET_STATUS = 2;
+  }
+
+  // An action tells the handler which function
+  // the payload requested to use.
+  Action action = 1;
+
+  // Time the transaction was sent.
+  uint64 timestamp = 2;
+  
+  // All the data neccessitated by the actions
+  // defined in the enum.
+  CreateItemAction create_item = 3;
+  EditDescriptionAction edit_description = 4;
+  SetStatusAction set_status = 5;
+}
+
+message CreateItemAction {
+  //info about user
+  string public_key = 1;
+
+  //The name of the user
+  string name = 2;
+
+  //description
+  string description = 3;
+}
+
+message EditDescriptionAction {
+  //new description
+  string description = 1;
+}
+
+message SetStatusAction {
+  //new status
+  bool is_done = 1;
+}
