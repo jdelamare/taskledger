@@ -85,7 +85,32 @@ def _create_task(payload, signer, timestamp, state):
 
 
 def _create_project(payload, signer, timestamp, state):
-    project_name = payload
+    project_name = payload.project_name
+    # make address of project metanode
+    project_node_address = addressing.make_project_node_address(project_name)
+
+    # get the current projects
+    project_container = _get_container(state,project_node_address)
+    if not project_container: #if no container exists, create one
+        project_container = ProjectNodeContainer(entries=[])
+
+    #check to see if a project already exists under the same name
+    if any(project_node.project_name == project_name
+           for project_node in container.entries):
+        raise InvalidTransaction(
+            'Project with this name already exists.')
+
+    # create the metanode protobuf object
+    project_node = ProjectNode(
+        project_name = project_name,
+        public_keys = [signer], #add creator of project to authorized public key list
+        current_sprint = -1)
+    #add project to container
+    project_container.entries.append(project_node)
+    #set state with new project included
+    _set_container(state,project_node_address,project_container)
+    # calls increment sprint to go from sprint -1 to 0 and initalize sprint metanode
+    _incremenet_sprint(IncrementSprintAction(project_name = project_name),signer,timestamp,state)
 
 def _edit_task(payload, signer, timestamp, state):
 
@@ -139,7 +164,6 @@ def _get_container(state, address):
     if entries:
         data = entries[0].data          # get the first address in a list of them
         container.ParseFromString(data) # it looks like some encoded data
-
     return container    
 
 
