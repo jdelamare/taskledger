@@ -70,19 +70,37 @@ class SkltnTransactionHandler(TransactionHandler):
 
 # Utility functions
 def _create_task(payload, signer, timestamp, state):
-    verification?
-    
-    needs name, if not name it cannot be made
-    
-    needs description if not desc than cannot make
+    project_name = payload.project_name # out of CreateTaskAction
+#    _verify_signer(signer, project_name) 
 
-    
+    # need to confirm we have the right project and legit signer
+    project_node = make_project_node_address(project_name)
+    container = get_container(project_node) 
+
+    if all(legit_users.public_key != public_key for legit_users in container.entries):
+        raise InvalidTransaction(
+            "User must be authorized to make changes to this project")
+        
+    if not payload.name:
+        raise InvalidTransaction(
+            'Task must have a name.'
+    )
+
+    if not payload.description:
+         raise InvalidTransaction(
+            'Task must have a description.'
+    )
+   
+    # we made it here, it's all good. create the object
     task = Task (
-        name = payload.name # ?
+        name = payload.name 
         description = payload.description
         timestamp = timestamp
     )
 
+    #place it in state, probably needs to be serialized
+    project_container.extend(container)
+    set_container(state, address, container)
 
 def _create_project(payload, signer, timestamp, state):
 
@@ -157,6 +175,14 @@ def _set_container(state, address, container):
 
 # Any potential verification functions
 
+def _verify_signer(signer, project_name):
+    # check to see that the signer is in the project node's list of authorized signers
+    # verify project name
+    address = make_project_node_address(project_name)
+    if all(agent.public_key != public_key for agent in container.entries):
+    if all(pk in thing for keys in list of keys)
+    if any(agent.public_key == public_key for agent in container.entries):
+
 TYPE_TO_ACTION_HANDLER = { 
     # Payload.CREATE_AGENT: ('create_agent', _create_agent),
-} 
+}
