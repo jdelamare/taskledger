@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message ProjectNode {
+    //list of public keys of users that can make changes to this project
+    repeated string public_keys = 1;
+
+    uint64 current_sprint = 2;
+}

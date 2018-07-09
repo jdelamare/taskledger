@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 
-message Item {
+message Task {
   enum Progress{
      NOT_STARTED = 0;
      IN_PROGRESS = 1;
@@ -16,7 +16,4 @@ message Item {
 
   // Unix UTC timestamp of approximately when this agent was registered
   uint64 timestamp = 3;
-
-  // current status of item
-  Progress progress = 4;
 }
