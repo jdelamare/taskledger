@@ -2,5 +2,5 @@ syntax = "proto3";
 
 message ProjectNode {
     //list of names of task items
-    repeated string public_keys = 1;
+    repeated string task_names = 1;
 }

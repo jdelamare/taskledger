@@ -4,10 +4,11 @@ message Payload {
   enum Action {
     CREATE_PROJECT = 0;
     CREATE_TASK = 1;
-    EDIT_TASK = 2;
-    INCREMENT_SPRINT = 3;
-    ADD_USER = 4;
-    REMOVE_USER = 5;
+    PROGRESS_TASK = 2;
+    EDIT_TASK = 3;
+    INCREMENT_SPRINT = 4;
+    ADD_USER = 5;
+    REMOVE_USER = 6;
   }
 
   // An action tells the handler which function
@@ -21,35 +22,46 @@ message Payload {
   // defined in the enum.
   CreateProjectAction create_project = 3;
   CreateTaskAction create_task = 4;
-  EditTaskAction edit_task = 5;
-  IncrementSprintAction increment_sprint = 6;
-  AddUserAction add_user = 7;
-  RemoveUserAction remove_user = 8;
+  ProgressTaskAction progress_task = 5;
+  EditTaskAction edit_task = 6;
+  IncrementSprintAction increment_sprint = 7;
+  AddUserAction add_user = 8;
+  RemoveUserAction remove_user = 9;
 }
 
 message CreateProjectAction {
   //project name
   string project_name = 1;
 
-
 }
 
 message CreateTaskAction {
+  string project_name = 1;
+  string name = 2;
+  string description = 3;
+}
 
+message ProgressTaskAction {
+  string project_name = 1;
+  string name = 2;
 }
 
 message EditTaskAction {
-
+  string project_name = 1;
+  string name = 2;
+  string description = 3;
 }
 
 message IncrementSprintAction {
-
+  string project_name = 1;
 }
 
 message AddUserAction {
-
+  string project_name = 1;
+  string public_key = 2;
 }
 
 message RemoveUserAction {
-
+  string project_name = 1;
+  string public_key = 2;
 }

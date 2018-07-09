@@ -8,12 +8,14 @@ message Task {
      DONE = 2;
      TESTED = 3;
   }
-  // name of item, used as identifier
+  // name of task, used as identifier
   string name = 1;
 
-  // A human readable description of the item
+  // A =description of the task
   string description = 2;
 
-  // Unix UTC timestamp of approximately when this agent was registered
+  // Unix UTC timestamp of approximately when this task was registered
   uint64 timestamp = 3;
+
+
 }
