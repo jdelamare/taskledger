@@ -85,6 +85,7 @@ def _create_task(payload, signer, timestamp, state):
 
 
 def _create_project(payload, signer, timestamp, state):
+    project_name = payload
 
 def _edit_task(payload, signer, timestamp, state):
 
@@ -158,5 +159,11 @@ def _set_container(state, address, container):
 # Any potential verification functions
 
 TYPE_TO_ACTION_HANDLER = { 
-    # Payload.CREATE_AGENT: ('create_agent', _create_agent),
+    Payload.CREATE_PROJECT: ('create_project', _create_project),
+    Payload.CREATE_TASK: ('create_task', _create_task),
+    Payload.PROGRESS_TASK: ('progress_task', _progress_task),
+    Payload.EDIT_TASK: ('edit_task', _edit_task),
+    Payload.INCREMENT_SPRINT: ('increment_sprint', _create_project),
+    Payload.ADD_USER: ('add_user', _add_user),
+    Payload.REMOVE_USER: ('remove_user', _remove_user),
 } 
