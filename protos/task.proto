@@ -5,8 +5,8 @@ message Task {
   enum Progress{
      NOT_STARTED = 0;
      IN_PROGRESS = 1;
-     DONE = 2;
-     TESTED = 3;
+     TESTING = 2;
+     DONE = 3;
   }
   string project_name = 1;
   // name of task, used as identifier
