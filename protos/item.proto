@@ -2,16 +2,21 @@ syntax = "proto3";
 
 
 message Item {
-
+  enum Progress{
+     NOT_STARTED = 0;
+     IN_PROGRESS = 1;
+     DONE = 2;
+     TESTED = 3;
+  }
   // name of item, used as identifier
-  string name = 2;
+  string name = 1;
 
   // A human readable description of the item
-  string description = 3;
+  string description = 2;
 
   // Unix UTC timestamp of approximately when this agent was registered
-  uint64 timestamp = 4;
+  uint64 timestamp = 3;
 
   // current status of item
-  bool is_done = 5;
+  Progress progress = 4;
 }
