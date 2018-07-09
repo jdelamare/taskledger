@@ -23,7 +23,7 @@ from sawtooth_sdk.processor.exceptions import InvalidTransaction
 from sawtooth_sdk.processor.exceptions import InternalError
 
 # Skltn protos
-from protobuf.item_pb2 import Item, AgentContainer
+from protobuf.item_pb2 import Item
 from protobuf.payload_pb2 import Payload
 
 # Skltn addressing specs
@@ -65,45 +65,34 @@ class SkltnTransactionHandler(TransactionHandler):
 
 # Handler functions
 
-def _create_agent(payload, signer, timestamp, state):
-    # agents have names, get it from the payload and check its existence
-    name = payload.name
-    # the public key is the signer, make a variable public_key and assign to it
-    public_key = signer
-    # verify a name was provided
-    if not name:
-        raise InvalidTransaction(
-            'Must provide agent name.'
-        )
-
-    # verify a public_key was provided, just check its existence, don't use _verify_agent
-    if not public_key:
-        raise InvalidTransaction(
-            'Public key is required.')
-
-    # an address in the merkel tree is required. refer to addressing.py, the identifier
-    # is the public_key created above
-    address = addressing.make_agent_address(public_key)
-    # grab a container of any potential agents in state given the address provided above
-    container = _get_container(state,address)
-    # view docs on any(x)
-    # check to see if an agent public_key that matches the public_key above exists in 
-    # in the container entries
-    if any(agent.public_key ==  public_key for agent in container.entries):  # fill me in
-        raise InvalidTransaction(
-                'Agent already exists.')
-
-    # create a new agent object with a public key and name
-    agent = Agent(public_key = public_key, name = name)
-    # extend the current container to include the agent created above
-    container.entries.extend([agent])
-    # do this crazy thing
-    container.entries.sort(key=lambda ag: ag.public_key)
-
-    # call set container to put the agent container into state at the address 
-    _set_container(state, address, container)
+# TODO: how many handler functions, these need prototypes
+# address h(public key + project name) for the main part
 
 # Utility functions
+def _create_task(payload, signer, timestamp, state):
+    verification?
+    
+    needs name, if not name it cannot be made
+    
+    needs description if not desc than cannot make
+
+    
+    task = Task (
+        name = payload.name # ?
+        description = payload.description
+        timestamp = timestamp
+    )
+
+
+def _create_project(payload, signer, timestamp, state):
+
+def _edit_task(payload, signer, timestamp, state):
+
+def _incremenet_sprint(payload, signer, timestamp, state):
+
+def _add_user(payload, signer, timestamp, state):
+
+def _remove_user(payload, signer, timestamp, state):
 
 def _unpack_transaction(transaction, state):
     '''Return the transaction signing key, the SCPayload timestamp, the
@@ -142,7 +131,7 @@ def _unpack_transaction(transaction, state):
     return signer, timestamp, payload, handler
 
 
-def _get_item(state, address):
+def _get_container(state, address):
     
     entries = state.get_state([address])    # API call, entries 
 
@@ -153,8 +142,8 @@ def _get_item(state, address):
     return container    
 
 
-def _set_item(state, address, container):
-    try:
+def _set_container(state, address, container):
+   try:
         addresses = state.set_state({
         address: container.SerializeToString()
         })
@@ -166,18 +155,8 @@ def _set_item(state, address, container):
             'State error, likely using wrong in/output fields in tx header.')
 
 
-def _verify_agent(state, public_key):
-    ''' Verify that public_key has been registered as an agent '''
-    # given the public_key, generate address 
-        # the public key is the identifier in addressing.py
-
-    # get the container which is very likely just one agent
-
-    # iterate through the container to see if any of the agents
-    # in the container have a public_key that matches the one
-    # passed in
-
+# Any potential verification functions
 
 TYPE_TO_ACTION_HANDLER = { 
-    Payload.CREATE_AGENT: ('create_agent', _create_agent),
+    # Payload.CREATE_AGENT: ('create_agent', _create_agent),
 } 
