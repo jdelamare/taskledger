@@ -71,16 +71,16 @@ class SkltnTransactionHandler(TransactionHandler):
 # Utility functions
 def _create_task(payload, signer, timestamp, state):
     project_name = payload.project_name # out of CreateTaskAction
-#    _verify_signer(signer, project_name) 
 
-    # need to confirm we have the right project and legit signer
     project_node = make_project_node_address(project_name)
     container = get_container(project_node) 
 
     if all(legit_users.public_key != public_key for legit_users in container.entries):
         raise InvalidTransaction(
             "User must be authorized to make changes to this project")
-        
+
+#    if any(task_names == in list of tasks  for task_names in container.entries
+
     if not payload.name:
         raise InvalidTransaction(
             'Task must have a name.'
@@ -97,12 +97,41 @@ def _create_task(payload, signer, timestamp, state):
         description = payload.description
         timestamp = timestamp
     )
+    
+    if not task_container:
+        task_container = TaskContainer(entries=[])
 
     #place it in state, probably needs to be serialized
     project_container.extend(container)
     set_container(state, address, container)
 
 def _create_project(payload, signer, timestamp, state):
+    project_name = payload.project_name
+    # make address of project metanode
+    project_node_address = addressing.make_project_node_address(project_name)
+
+    # get the current projects
+    project_container = _get_container(state,project_node_address)
+    if not project_container: #if no container exists, create one
+        project_container = ProjectNodeContainer(entries=[])
+
+    #check to see if a project already exists under the same name
+    if any(project_node.project_name == project_name
+           for project_node in container.entries):
+        raise InvalidTransaction(
+            'Project with this name already exists.')
+
+    # create the metanode protobuf object
+    project_node = ProjectNode(
+        project_name = project_name,
+        public_keys = [signer], #add creator of project to authorized public key list
+        current_sprint = -1)
+    #add project to container
+    project_container.entries.append(project_node)
+    #set state with new project included
+    _set_container(state,project_node_address,project_container)
+    # calls increment sprint to go from sprint -1 to 0 and initalize sprint metanode
+    _incremenet_sprint(IncrementSprintAction(project_name = project_name),signer,timestamp,state)
 
 def _edit_task(payload, signer, timestamp, state):
 
@@ -156,7 +185,6 @@ def _get_container(state, address):
     if entries:
         data = entries[0].data          # get the first address in a list of them
         container.ParseFromString(data) # it looks like some encoded data
-
     return container    
 
 
@@ -184,5 +212,11 @@ def _verify_signer(signer, project_name):
     if any(agent.public_key == public_key for agent in container.entries):
 
 TYPE_TO_ACTION_HANDLER = { 
-    # Payload.CREATE_AGENT: ('create_agent', _create_agent),
-}
+    Payload.CREATE_PROJECT: ('create_project', _create_project),
+    Payload.CREATE_TASK: ('create_task', _create_task),
+    Payload.PROGRESS_TASK: ('progress_task', _progress_task),
+    Payload.EDIT_TASK: ('edit_task', _edit_task),
+    Payload.INCREMENT_SPRINT: ('increment_sprint', _create_project),
+    Payload.ADD_USER: ('add_user', _add_user),
+    Payload.REMOVE_USER: ('remove_user', _remove_user),
+} 
