@@ -177,16 +177,16 @@ priv_key = hashlib.sha224(passcode.encode('utf-8')).hexdigest()
 
 name = "John Doe"
 
-//create item
+# create item
 args = ["create_item", priv_key, name, description]
 
-//edit description
+# edit description
 args = ["edit_description", priv_key,name, description]
 
-//set status
+# set status
 args = ["set_status", priv_key,name, is_done]
 
-//run desired function
+# run desired function
 getattr(todo, args[0])(args)
 
 args = ["create_batch", priv_key]        
