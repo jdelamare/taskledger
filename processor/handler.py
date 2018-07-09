@@ -115,6 +115,33 @@ def _create_project(payload, signer, timestamp, state):
 def _edit_task(payload, signer, timestamp, state):
 
 def _incremenet_sprint(payload, signer, timestamp, state):
+    project_name = payload.project_name
+
+    # make address of sprint metanode
+    sprint_node_address = addressing.make_sprint_node_address(project_name)
+
+    # get the current projects
+    project_container = _get_container(state, project_node_address)
+    if not project_container:  # if no container exists, create one
+        project_container = ProjectNodeContainer(entries=[])
+
+    # check to see if a project already exists under the same name
+    if any(project_node.project_name == project_name
+           for project_node in container.entries):
+        raise InvalidTransaction(
+            'Project with this name already exists.')
+
+    # create the metanode protobuf object
+    project_node = ProjectNode(
+        project_name=project_name,
+        public_keys=[signer],  # add creator of project to authorized public key list
+        current_sprint=-1)
+    # add project to container
+    project_container.entries.append(project_node)
+    # set state with new project included
+    _set_container(state, project_node_address, project_container)
+    # calls increment sprint to go from sprint -1 to 0 and initalize sprint metanode
+    _incremenet_sprint(IncrementSprintAction(project_name=project_name), signer, timestamp, state)
 
 def _add_user(payload, signer, timestamp, state):
 
@@ -178,6 +205,37 @@ def _set_container(state, address, container):
     except:
         raise InternalError(
             'State error, likely using wrong in/output fields in tx header.')
+
+def _get_project_node(project_name):
+    # make address of project metanode
+    project_node_address = addressing.make_project_node_address(project_name)
+
+    # get the current projects
+    project_container = _get_container(state, project_node_address)
+
+    project_node = None
+    for project_node_temp in project_container.entries: #find project with correct name
+        if project_node_temp.project_name == project_name:
+            project_node = project_node_temp
+
+    return project_node
+
+def _get_sprint_node(project_name,sprint):
+    # make address of project metanode
+    sprint_node_address = addressing.make_sprint_node_address(project_name=project_name,sprint=sprint)
+
+    # get the current projects
+    sprint_container = _get_container(state, sprint_node_address)
+
+    sprint_node = None
+    for sprint_node_temp in sprint_container.entries:  # find project with correct name
+        if sprint_node_temp.project_name == project_name:
+            sprint_node = sprint_node_temp
+
+    return sprint_node
+
+def _get_current_sprint_node(project_name):
+    _get_sprint_node(project_name,_get_project_node(project_name).current_sprint)
 
 
 # Any potential verification functions
