@@ -16,6 +16,8 @@ message Task {
 
   // Unix UTC timestamp of approximately when this task was registered
   uint64 timestamp = 3;
+}
 
-
+message TaskContainer {
+  repeated Task entries = 1;
 }

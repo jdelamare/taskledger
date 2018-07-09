@@ -6,3 +6,7 @@ message ProjectNode {
 
     uint64 current_sprint = 2;
 }
+
+message ProjectNodeContainer {
+    repeated ProjectNode entries = 1;
+}
