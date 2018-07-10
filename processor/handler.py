@@ -205,7 +205,6 @@ def _unpack_transaction(transaction, state):
     return signer, timestamp, payload, handler
 
 
-<<<<<<< HEAD
 def _get_container(state, address):
     namespace = address[6:8] 
 
