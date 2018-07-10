@@ -70,17 +70,6 @@ class SkltnTransactionHandler(TransactionHandler):
 
 # Utility functions
 def _create_task(payload, signer, timestamp, state):
-    project_name = payload.project_name # out of CreateTaskAction
-
-    project_node = make_project_node_address(project_name)
-    container = get_container(project_node) 
-
-    if all(legit_users.public_key != public_key for legit_users in container.entries):
-        raise InvalidTransaction(
-            "User must be authorized to make changes to this project")
-
-#    if any(task_names == in list of tasks  for task_names in container.entries
-
     if not payload.name:
         raise InvalidTransaction(
             'Task must have a name.'
@@ -90,19 +79,33 @@ def _create_task(payload, signer, timestamp, state):
          raise InvalidTransaction(
             'Task must have a description.'
     )
-   
+ 
+    project_name = payload.project_name 
+    project_node = get_project_node(project_name)
+    container = get_container(project_node) 
+    if all(legit_users.public_key != public_key for legit_users in container.entries):
+        raise InvalidTransaction(
+            "User must be authorized to make changes to this project")
+
+#    if any(task_names == in list of tasks  for task_names in container.entries
+
+    sprint = _get_current_sprint_node(project_name)
+    if any(task == payload.name for task in sprint.task_names)
+
     # we made it here, it's all good. create the object
     task = Task (
+        project_name = project_name,
         name = payload.name 
         description = payload.description
         timestamp = timestamp
     )
-    
-    if not task_container:
-        task_container = TaskContainer(entries=[])
+ 
+    # can we pass `NOT_STARTED` here or must this be `0`?
+    address = make_task_address(project_name, project_node.current_sprint, payload.name, NOT_STARTED)
+    container = _get_container(state, address)
 
-    #place it in state, probably needs to be serialized
-    project_container.extend(container)
+    container.entries.extend([task])       
+
     set_container(state, address, container)
 
 def _create_project(payload, signer, timestamp, state):
@@ -206,12 +209,20 @@ def _unpack_transaction(transaction, state):
 
 
 def _get_container(state, address):
-    
-    entries = state.get_state([address])    # API call, entries 
+    namespace = address[6:8] 
+
+    containers = {
+        addressing.PROJECT_METANODE : ProjectNodeContainer,
+        addressing.SPRINT_METANODE : SprintNodeContainer,
+        addressing.TODO_TASK : TaskContainer,
+    }
+    container = containers[namespace]()
+    entries = state.get_state([address])    
 
     if entries:
         data = entries[0].data          # get the first address in a list of them
         container.ParseFromString(data) # it looks like some encoded data
+
     return container    
 
 
@@ -234,29 +245,33 @@ def _get_project_node(project_name):
     # get the current projects
     project_container = _get_container(state, project_node_address)
 
-    project_node = None
-    for project_node_temp in project_container.entries: #find project with correct name
-        if project_node_temp.project_name == project_name:
-            project_node = project_node_temp
+    for project_node in project_container.entries: #find project with correct name
+        if project_node.project_name == project_name:
+            return project_node 
 
-    return project_node
+    return None 
 
 def _get_sprint_node(project_name,sprint):
     # make address of project metanode
-    sprint_node_address = addressing.make_sprint_node_address(project_name=project_name,sprint=sprint)
+    sprint_node_address = addressing.make_sprint_node_address(project_name,sprint)
 
     # get the current projects
     sprint_container = _get_container(state, sprint_node_address)
 
-    sprint_node = None
-    for sprint_node_temp in sprint_container.entries:  # find project with correct name
-        if sprint_node_temp.project_name == project_name:
-            sprint_node = sprint_node_temp
+    for sprint_node in sprint_container.entries:  # find project with correct name
+        if sprint_node.project_name == project_name:
+            return sprint_node
 
-    return sprint_node
+    return None 
 
 def _get_current_sprint_node(project_name):
-    _get_sprint_node(project_name,_get_project_node(project_name).current_sprint)
+    project_node = _get_project_node(project_name)
+    if project_node:
+        sprint_node = _get_sprint_node(project_name, project_node.current_sprint)
+        return sprint_node
+
+    return None
+    # _get_sprint_node(project_name,_get_project_node(project_name).current_sprint)
 
 
 # Any potential verification functions

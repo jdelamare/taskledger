@@ -9,13 +9,13 @@ NAMESPACE = _hash(FAMILY_NAME)[:6] # namespace
 
 PROJECT_METANODE = '0' # tag character defines address type
 SPRINT_METANODE = '1'
-TODO_ITEM = '2'
+TODO_TASK = '2'
 
 
-def make_item_address(project_name,sprint,task_name,stage):
+def make_task_address(project_name,sprint,task_name,stage):
     return (
         NAMESPACE
-        + TODO_ITEM
+        + TODO_TASK
         + _hash(project_name)[:47]
         + sprint
         + _hash(task_name)
@@ -38,3 +38,4 @@ def make_sprint_node_address(project_name,sprint):
         + sprint
         + ('0'*13)
     )
+
