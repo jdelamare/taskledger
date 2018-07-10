@@ -80,6 +80,7 @@ def _create_task(payload, signer, timestamp, state):
     project_name = payload.project_name 
     project_node = get_project_node(project_name)
     container = get_container(project_node) 
+
     if all(legit_users.public_key != public_key for legit_users in container.entries):
         raise InvalidTransaction(
             "User must be authorized to make changes to this project")
@@ -163,9 +164,18 @@ def _increment_sprint(payload, signer, timestamp, state):
         #todo check if in done category. If not, copy over all stages to new sprint
         task_address = addressing.make_item_address(project_name,current_sprint,name)
 
-def _add_user(payload, signer, timestamp, state):
 
+# add a public key to the list of those allowed to edit the project
+def _add_user(payload, signer, timestamp, state):
+    project_node = _get_project_node(payload.project_name)
+    project_node.public_keys.extend([payload.public_key]) 
+
+
+# remove a public key from the list of those allowed to edit the project
 def _remove_user(payload, signer, timestamp, state):
+    project_node = _get_project_node(payload.project_name)
+    project_node.public_keys.remove([payload.public_key])
+
 
 def _unpack_transaction(transaction, state):
     '''Return the transaction signing key, the SCPayload timestamp, the
@@ -204,6 +214,7 @@ def _unpack_transaction(transaction, state):
     return signer, timestamp, payload, handler
 
 
+#TODO: Notice how this only ever returns the first of the potentially many entries
 def _get_container(state, address):
     namespace = address[6:8] 
 
