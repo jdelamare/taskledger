@@ -65,25 +65,48 @@ class SkltnTransactionHandler(TransactionHandler):
         # note that handler will be chosen by what was given to unpack
         handler(payload, signer, timestamp, state)
 
+
 # Handler functions
 
-# TODO: how many handler functions, these need prototypes
-# address h(public key + project name) for the main part
-
-# Utility functions
 def _create_task(payload, signer, timestamp, state):
-    verification?
-    
-    needs name, if not name it cannot be made
-    
-    needs description if not desc than cannot make
+    if not payload.name:
+        raise InvalidTransaction(
+            'Task must have a name.'
+    )
 
-    
+    if not payload.description:
+         raise InvalidTransaction(
+            'Task must have a description.'
+    )
+ 
+    project_name = payload.project_name 
+    project_node = get_project_node(project_name)
+    container = get_container(project_node) 
+
+    if all(legit_users.public_key != public_key for legit_users in container.entries):
+        raise InvalidTransaction(
+            "User must be authorized to make changes to this project")
+
+    sprint = _get_current_sprint_node(project_name)
+    if any(task == payload.name for task in sprint.task_names)
+        raise InvalidTransaction(
+            "This task name is already in use.")
+        
+    # we made it here, it's all good. create the object
     task = Task (
-        name = payload.name # ?
+        project_name = project_name,
+        name = payload.name 
         description = payload.description
         timestamp = timestamp
     )
+ 
+    # can we pass `NOT_STARTED` here or must this be `0`?
+    address = make_task_address(project_name, project_node.current_sprint, payload.name, task.NOT_STARTED)
+    container = _get_container(state, address)
+
+    container.entries.extend([task])       
+
+    set_container(state, address, container)
 
 
 def _create_project(payload, signer, timestamp, state):
@@ -112,6 +135,7 @@ def _create_project(payload, signer, timestamp, state):
     #set state with new project included
     _set_container(state,project_node_address,project_container)
     # todo initialize first sprint node
+
 
 def _edit_task(payload, signer, timestamp, state):
 
@@ -143,9 +167,18 @@ def _increment_sprint(payload, signer, timestamp, state):
 
         task_address = addressing.make_task_address(project_name,current_sprint,name)
 
-def _add_user(payload, signer, timestamp, state):
 
+# add a public key to the list of those allowed to edit the project
+def _add_user(payload, signer, timestamp, state):
+    project_node = _get_project_node(payload.project_name)
+    project_node.public_keys.extend([payload.public_key]) 
+
+
+# remove a public key from the list of those allowed to edit the project
 def _remove_user(payload, signer, timestamp, state):
+    project_node = _get_project_node(payload.project_name)
+    project_node.public_keys.remove([payload.public_key])
+
 
 def _unpack_transaction(transaction, state):
     '''Return the transaction signing key, the SCPayload timestamp, the
@@ -184,13 +217,22 @@ def _unpack_transaction(transaction, state):
     return signer, timestamp, payload, handler
 
 
-def _get_container(state, address,):
-    
-    entries = state.get_state([address])    # API call, entries 
+#TODO: Notice how this only ever returns the first of the potentially many entries
+def _get_container(state, address):
+    namespace = address[6:8] 
+
+    containers = {
+        addressing.PROJECT_METANODE : ProjectNodeContainer,
+        addressing.SPRINT_METANODE : SprintNodeContainer,
+        addressing.TODO_TASK : TaskContainer,
+    }
+    container = containers[namespace]()
+    entries = state.get_state([address])    
 
     if entries:
         data = entries[0].data          # get the first address in a list of them
         container.ParseFromString(data) # it looks like some encoded data
+
     return container    
 
 
@@ -206,6 +248,7 @@ def _set_container(state, address, container):
         raise InternalError(
             'State error, likely using wrong in/output fields in tx header.')
 
+
 def _get_project_node(project_name):
     # make address of project metanode
     project_node_address = addressing.make_project_node_address(project_name)
@@ -213,18 +256,20 @@ def _get_project_node(project_name):
     # get the current projects
     project_container = _get_container(state, project_node_address)
 
-    for project_node_temp in project_container.entries: #find project with correct name
-        if project_node_temp.project_name == project_name:
-            return project_node_temp
+    for project_node in project_container.entries: #find project with correct name
+        if project_node.project_name == project_name:
+            return project_node 
 
-    return None
+    return None 
+
 
 def _get_sprint_node(project_name,sprint):
     # make address of project metanode
-    sprint_node_address = addressing.make_sprint_node_address(project_name=project_name,sprint=sprint)
+    sprint_node_address = addressing.make_sprint_node_address(project_name,sprint)
 
     # get the current projects
     sprint_container = _get_container(state, sprint_node_address)
+
 
     for sprint_node_temp in sprint_container.entries:  # find project with correct name
         if sprint_node_temp.project_name == project_name:
@@ -232,11 +277,26 @@ def _get_sprint_node(project_name,sprint):
 
     return None
 
+
 def _get_current_sprint_node(project_name):
-    _get_sprint_node(project_name,_get_project_node(project_name).current_sprint)
+    project_node = _get_project_node(project_name)
+    if project_node:
+        sprint_node = _get_sprint_node(project_name, project_node.current_sprint)
+        return sprint_node
+
+    return None
 
 
 # Any potential verification functions
+
+def _verify_signer(signer, project_name):
+    # check to see that the signer is in the project node's list of authorized signers
+    # verify project name
+    address = make_project_node_address(project_name)
+    if all(agent.public_key != public_key for agent in container.entries):
+    if all(pk in thing for keys in list of keys)
+    if any(agent.public_key == public_key for agent in container.entries):
+
 
 TYPE_TO_ACTION_HANDLER = { 
     Payload.CREATE_PROJECT: ('create_project', _create_project),
