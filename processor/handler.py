@@ -63,12 +63,9 @@ class SkltnTransactionHandler(TransactionHandler):
         # note that handler will be chosen by what was given to unpack
         handler(payload, signer, timestamp, state)
 
+
 # Handler functions
 
-# TODO: how many handler functions, these need prototypes
-# address h(public key + project name) for the main part
-
-# Utility functions
 def _create_task(payload, signer, timestamp, state):
     if not payload.name:
         raise InvalidTransaction(
@@ -87,11 +84,11 @@ def _create_task(payload, signer, timestamp, state):
         raise InvalidTransaction(
             "User must be authorized to make changes to this project")
 
-#    if any(task_names == in list of tasks  for task_names in container.entries
-
     sprint = _get_current_sprint_node(project_name)
     if any(task == payload.name for task in sprint.task_names)
-
+        raise InvalidTransaction(
+            "This task name is already in use.")
+        
     # we made it here, it's all good. create the object
     task = Task (
         project_name = project_name,
@@ -101,12 +98,13 @@ def _create_task(payload, signer, timestamp, state):
     )
  
     # can we pass `NOT_STARTED` here or must this be `0`?
-    address = make_task_address(project_name, project_node.current_sprint, payload.name, NOT_STARTED)
+    address = make_task_address(project_name, project_node.current_sprint, payload.name, task.NOT_STARTED)
     container = _get_container(state, address)
 
     container.entries.extend([task])       
 
     set_container(state, address, container)
+
 
 def _create_project(payload, signer, timestamp, state):
     project_name = payload.project_name
@@ -134,6 +132,7 @@ def _create_project(payload, signer, timestamp, state):
     #set state with new project included
     _set_container(state,project_node_address,project_container)
     # todo initialize first sprint node
+
 
 def _edit_task(payload, signer, timestamp, state):
 
@@ -235,6 +234,7 @@ def _set_container(state, address, container):
         raise InternalError(
             'State error, likely using wrong in/output fields in tx header.')
 
+
 def _get_project_node(project_name):
     # make address of project metanode
     project_node_address = addressing.make_project_node_address(project_name)
@@ -247,6 +247,7 @@ def _get_project_node(project_name):
             return project_node 
 
     return None 
+
 
 def _get_sprint_node(project_name,sprint):
     # make address of project metanode
@@ -262,6 +263,7 @@ def _get_sprint_node(project_name,sprint):
 
     return None
 
+
 def _get_current_sprint_node(project_name):
     project_node = _get_project_node(project_name)
     if project_node:
@@ -269,7 +271,6 @@ def _get_current_sprint_node(project_name):
         return sprint_node
 
     return None
-    # _get_sprint_node(project_name,_get_project_node(project_name).current_sprint)
 
 
 # Any potential verification functions
@@ -281,6 +282,7 @@ def _verify_signer(signer, project_name):
     if all(agent.public_key != public_key for agent in container.entries):
     if all(pk in thing for keys in list of keys)
     if any(agent.public_key == public_key for agent in container.entries):
+
 
 TYPE_TO_ACTION_HANDLER = { 
     Payload.CREATE_PROJECT: ('create_project', _create_project),
