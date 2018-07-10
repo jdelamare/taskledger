@@ -23,8 +23,10 @@ from sawtooth_sdk.processor.exceptions import InvalidTransaction
 from sawtooth_sdk.processor.exceptions import InternalError
 
 # Skltn protos
-from protobuf.item_pb2 import Item
-from protobuf.payload_pb2 import Payload
+from protobuf.task_pb2 import *
+from protobuf.payload_pb2 import *
+from protobuf.project_node_pb2 import *
+from protobuf.sprint_node_pb2 import *
 
 # Skltn addressing specs
 import addressing
@@ -134,11 +136,12 @@ def _increment_sprint(payload, signer, timestamp, state):
     # add sprint to container
     sprint_container.entries.append(sprint_node)
     # set state with new project included
-    _set_container(state, project_node_address, project_container)
+    _set_container(state, sprint_node_address, sprint_container)
 
     for name in task_names:
-        #todo check if in done category. If not, copy over all stages to new sprint
-        task_address = addressing.make_item_address(project_name,current_sprint,name)
+        task_container = _get_container(addressing.make_task_address
+
+        task_address = addressing.make_task_address(project_name,current_sprint,name)
 
 def _add_user(payload, signer, timestamp, state):
 

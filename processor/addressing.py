@@ -12,7 +12,7 @@ SPRINT_METANODE = '1'
 TODO_ITEM = '2'
 
 
-def make_item_address(project_name,sprint,task_name,stage):
+def make_task_address(project_name,sprint,task_name,stage):
     return (
         NAMESPACE
         + TODO_ITEM
