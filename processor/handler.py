@@ -128,44 +128,41 @@ def _create_project(payload, signer, timestamp, state):
     project_node = ProjectNode(
         project_name = project_name,
         public_keys = [signer], #add creator of project to authorized public key list
-        current_sprint = -1)
+        current_sprint = 0)
     #add project to container
     project_container.entries.append(project_node)
     #set state with new project included
     _set_container(state,project_node_address,project_container)
-    # calls increment sprint to go from sprint -1 to 0 and initalize sprint metanode
-    _incremenet_sprint(IncrementSprintAction(project_name = project_name),signer,timestamp,state)
+    # todo initialize first sprint node
 
 def _edit_task(payload, signer, timestamp, state):
 
-def _incremenet_sprint(payload, signer, timestamp, state):
+def _increment_sprint(payload, signer, timestamp, state):
     project_name = payload.project_name
-
+    current_sprint = _get_project_node(project_name).current_sprint
     # make address of sprint metanode
-    sprint_node_address = addressing.make_sprint_node_address(project_name)
+    sprint_node_address = addressing.make_sprint_node_address(project_name,current_sprint+1)
 
-    # get the current projects
-    project_container = _get_container(state, project_node_address)
-    if not project_container:  # if no container exists, create one
-        project_container = ProjectNodeContainer(entries=[])
+    # get the current sprints at the address
+    sprint_container = _get_container(state, sprint_node_address)
+    if not sprint_container:  # if no container exists, create one
+        sprint_container = SprintNodeContainer(entries=[])
 
-    # check to see if a project already exists under the same name
-    if any(project_node.project_name == project_name
-           for project_node in container.entries):
-        raise InvalidTransaction(
-            'Project with this name already exists.')
-
+    #get past task names list from previous metanode
+    task_names = _get_current_sprint_node(project_name).task_names
     # create the metanode protobuf object
-    project_node = ProjectNode(
-        project_name=project_name,
-        public_keys=[signer],  # add creator of project to authorized public key list
-        current_sprint=-1)
-    # add project to container
-    project_container.entries.append(project_node)
+    sprint_node = SprintNode(
+        project_name = project_name,
+        task_names = task_names)  # add tasks added in past
+
+    # add sprint to container
+    sprint_container.entries.append(sprint_node)
     # set state with new project included
     _set_container(state, project_node_address, project_container)
-    # calls increment sprint to go from sprint -1 to 0 and initalize sprint metanode
-    _incremenet_sprint(IncrementSprintAction(project_name=project_name), signer, timestamp, state)
+
+    for name in task_names:
+        #todo check if in done category. If not, copy over all stages to new sprint
+        task_address = addressing.make_item_address(project_name,current_sprint,name)
 
 def _add_user(payload, signer, timestamp, state):
 
@@ -208,6 +205,7 @@ def _unpack_transaction(transaction, state):
     return signer, timestamp, payload, handler
 
 
+<<<<<<< HEAD
 def _get_container(state, address):
     namespace = address[6:8] 
 
@@ -258,11 +256,12 @@ def _get_sprint_node(project_name,sprint):
     # get the current projects
     sprint_container = _get_container(state, sprint_node_address)
 
-    for sprint_node in sprint_container.entries:  # find project with correct name
-        if sprint_node.project_name == project_name:
-            return sprint_node
 
-    return None 
+    for sprint_node_temp in sprint_container.entries:  # find project with correct name
+        if sprint_node_temp.project_name == project_name:
+            return sprint_node_temp
+
+    return None
 
 def _get_current_sprint_node(project_name):
     project_node = _get_project_node(project_name)
