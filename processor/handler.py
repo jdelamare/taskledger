@@ -146,10 +146,54 @@ def _progress_task(payload, signer, timestamp, state):
     # verify transaction is signed by authorized key
     _verify_contributor(signer, project_name)
 
+    #check if task is done
+    task_address = addressing.make_task_address(payload.project_name,
+                                                _get_project_node(payload.project_name).current_sprint,
+                                                payload.name, 3)
+    task_container = _get_container(state, task_address)
+    if any(payload.name == task.name for task in task_container.entries):
+        raise InvalidTransaction(
+                                 'Task already complete')
+
+    for progress in range(1, 4):
+        # go backwards through progress 2 to 0 and check to see if the task exists
+        # if it does, copy it to the next progress level
+        task_address = addressing.make_task_address(payload.project_name,
+                                                    _get_project_node(payload.project_name).current_sprint,
+                                                    payload.name, 3 - progress)
+        task_container = _get_container(state, task_address)
+        if task_container:
+            for task in task_container.entries:
+                if task.name == payload.name:
+                    new_task_container = _get_container(state,
+                                                        addressing.make_task_address(payload.project_name,
+                                                    _get_project_node(payload.project_name).current_sprint,
+                                                    payload.name, 4 - progress))
+                    if not new_task_container:
+                        new_task_container = TaskContainer(entries=[])
+                    new_task_container.append(task)
+                    _set_container(state, task_address, new_task_container)
+                    return
+                
+
 def _edit_task(payload, signer, timestamp, state):
     project_name = payload.project_name
     # verify transaction is signed by authorized key
     _verify_contributor(signer, project_name)
+
+    for progress in range(0,4):
+        # go backwards through progress 3 to 0 and check to see if the task exists, changing description if it does
+        task_address = addressing.make_task_address(payload.project_name,
+                                                _get_project_node(payload.project_name).current_sprint,
+                                                payload.name,3-progress)
+        task_container = _get_container(state,task_address)
+        if task_container:
+            for task in task_container.entries:
+                if task.name == payload.name:
+                    task.description = payload.description
+                    _set_container(state,task_address,task_container)
+                    return
+
 
 def _increment_sprint(payload, signer, timestamp, state):
     project_name = payload.project_name
