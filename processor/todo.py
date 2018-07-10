@@ -22,29 +22,20 @@ import requests
 import json
 import random
 from random import randint
+import sys
 
 # Sawtooth SDK
-from sawtooth_sdk.protobuf.transaction_pb2 import TransactionHeader
 from sawtooth_sdk.protobuf.transaction_pb2 import Transaction
 from sawtooth_sdk.protobuf.transaction_pb2 import TransactionHeader
 from sawtooth_sdk.protobuf.batch_pb2 import Batch
 from sawtooth_sdk.protobuf.batch_pb2 import BatchHeader
 from sawtooth_sdk.protobuf.batch_pb2 import BatchList
 
-
-from protobuf.payload_pb2 import Payload, CreateAssetAction
-from protobuf.payload_pb2 import CreateAgentAction, TouchAssetAction
+from protobuf.payload_pb2 import *
 import addressing
 
-
-def _get_prv_key():
-    return priv_key 
-
-
-def _get_batcher_public_key():
-    signer = _create_signer(_get_prv_key())
+def _get_batcher_public_key(signer):
     return signer.pubkey.serialize().hex()
-
 
 def _get_time():
     return int(time.time())
@@ -59,43 +50,196 @@ class Todo():
     def __init__(self):
         self.txns = []
 
-    def create_item(self, args):       # args [create_agent, private_key, name]
-        if len(args) < 1:
-            print("\nA private key is required to create an item.\n")
+    def create_project(self, args):
+        if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
             return
 
-        private_key = args[1]
+        #create signer using given private key
+        private_key = args[0]
         signer = _create_signer(private_key)
 
-        if 2 < len(args):
-            name = args[2]
-        else:
-            print("\nA name is required to create an item.\n")
-            return
-
-        # make the agent_payload, and specific attributes
-        agent_action = CreateAgentAction(
-                public_key = signer.pubkey.serialize().hex(),
-                name = name,
+        # bundle the action information
+        action = CreateProjectAction(
+                project_name = args[1],
         )
-
-        agent_payload = Payload(
-            action = 1,
+        # bundle the payload
+        payload = Payload(
+            action = 0,
             timestamp = _get_time(),
-            create_agent = agent_action,
+            create_project = action,
         )
 
-        # serialize before sending
-        payload_bytes = agent_payload.SerializeToString()
+        # serialize/encode before sending
+        payload_bytes = payload.SerializeToString()
 
         # Pack it all up and ship it out
         self.create_transaction(signer, payload_bytes)
 
+    def create_task(self, args):
+        if not len(args) == 4: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            return
+
+        #create signer using given private key
+        private_key = args[0]
+        signer = _create_signer(private_key)
+
+        # bundle the action information
+        action = CreateTaskAction(
+                project_name = args[1],
+                name = args[2],
+                description = args[3]
+        )
+        # bundle the payload
+        payload = Payload(
+            action = 1,
+            timestamp = _get_time(),
+            create_task = action,
+        )
+
+        # serialize/encode before sending
+        payload_bytes = payload.SerializeToString()
+
+        # Pack it all up and ship it out
+        self.create_transaction(signer, payload_bytes)
+
+    def progress_task(self, args):
+        if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            return
+
+        #create signer using given private key
+        private_key = args[0]
+        signer = _create_signer(private_key)
+
+        # bundle the action information
+        action = ProgressTaskAction(
+                project_name=args[1],
+                name=args[2],
+        )
+        # bundle the payload
+        payload = Payload(
+            action = 2,
+            timestamp = _get_time(),
+            progress_task = action,
+        )
+
+        # serialize/encode before sending
+        payload_bytes = payload.SerializeToString()
+
+        # Pack it all up and ship it out
+        self.create_transaction(signer, payload_bytes)
+
+    def edit_task(self, args):
+        if not len(args) == 4: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            return
+
+        #create signer using given private key
+        private_key = args[0]
+        signer = _create_signer(private_key)
+
+        # bundle the action information
+        action = EditTaskAction(
+                project_name = args[1],
+                name = args[2],
+                description = args[3]
+        )
+        # bundle the payload
+        payload = Payload(
+            action = 3,
+            timestamp = _get_time(),
+            edit_task = action,
+        )
+
+        # serialize/encode before sending
+        payload_bytes = payload.SerializeToString()
+
+        # Pack it all up and ship it out
+        self.create_transaction(signer, payload_bytes)
+
+    def increment_sprint(self, args):
+        if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            return
+
+        #create signer using given private key
+        private_key = args[0]
+        signer = _create_signer(private_key)
+
+        # bundle the action information
+        action = IncrementSprintAction(
+                project_name = args[1],
+        )
+        # bundle the payload
+        payload = Payload(
+            action = 4,
+            timestamp = _get_time(),
+            increment_sprint = action,
+        )
+
+        # serialize/encode before sending
+        payload_bytes = payload.SerializeToString()
+
+        # Pack it all up and ship it out
+        self.create_transaction(signer, payload_bytes)
+
+    def add_user(self, args):
+        if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            return
+
+        #create signer using given private key
+        private_key = args[0]
+        signer = _create_signer(private_key)
+
+        # bundle the action information
+        action = AddUserAction(
+                project_name = args[1],
+                public_key = args[2],
+        )
+        # bundle the payload
+        payload = Payload(
+            action = 1,
+            timestamp = _get_time(),
+            add_user = action,
+        )
+
+        # serialize/encode before sending
+        payload_bytes = payload.SerializeToString()
+
+        # Pack it all up and ship it out
+        self.create_transaction(signer, payload_bytes)
+
+    def remove_user(self, args):
+        if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            return
+
+        #create signer using given private key
+        private_key = args[0]
+        signer = _create_signer(private_key)
+
+        # bundle the action information
+        action = RemoveUserAction(
+                project_name = args[1],
+                public_key = args[2],
+        )
+        # bundle the payload
+        payload = Payload(
+            action = 1,
+            timestamp = _get_time(),
+            remove_user = action,
+        )
+
+        # serialize/encode before sending
+        payload_bytes = payload.SerializeToString()
+
+        # Pack it all up and ship it out
+        self.create_transaction(signer, payload_bytes)
 
     def create_transaction(self, signer, payload_bytes):
-        #private_key = _get_prv_key()
-        #signer2 = _create_signer(private_key)
-        #batch_pubkey = signer.pubkey.serialize().hex()
         txn_header_bytes = TransactionHeader(
             family_name='skltn',
             family_version='0.1',
@@ -106,14 +250,14 @@ class Todo():
             # but the batch can be signed by another party, in which case, the
             # public key will need to be associated with that key.          # make a global batch_public_key
             # batcher_public_key = signer.pubkey.serialize().hex(), # must have been generated from the private key being used to sign the Batch, or validation will fail
-            batcher_public_key = _get_batcher_public_key(),
+            batcher_public_key = _get_batcher_public_key(signer),
             # In this example, there are no dependencies.  This list should include
             # an previous transaction header signatures that must be applied for
             # this transaction to successfully commit.
             # For example,
             # dependencies=['540a6803971d1880ec73a96cb97815a95d374cbad5d865925e5aa0432fcf1931539afe10310c122c5eaae15df61236079abbf4f258889359c4d175516934484a'],
             dependencies=[],
-            payload_sha512=sha512(payload_bytes).hexdigest()
+            payload_sha512=hashlib.sha512(payload_bytes).hexdigest()
         ).SerializeToString()
 
         # Ecdsa signing standard, then remove extra ecdsa bytes using compact.
@@ -129,9 +273,7 @@ class Todo():
 
         self.txns.append(txn)
 
-
-    def create_batch(self, args):   # args [create_batch, private_key]
-        private_key = args[1]
+    def create_batch(self, private_key):   # args [create_batch, private_key]
         signer = _create_signer(private_key)
 
         batch_header_bytes = BatchHeader(
@@ -169,29 +311,18 @@ def send_it(batch_list_bytes):
 
 #subprocess.run(["docker-compose", "-f" "../sawtooth-default.yaml", "up", "-d"])
 
-
 todo = Todo()
 
-passcode = "hello"
+args = sys.argv[1:]
+passcode = args[1]
+
 priv_key = hashlib.sha224(passcode.encode('utf-8')).hexdigest()
-
-name = "John Doe"
-
-# create item
-args = ["create_item", priv_key, name, description]
-
-# edit description
-args = ["edit_description", priv_key,name, description]
-
-# set status
-args = ["set_status", priv_key,name, is_done]
+args[1] = priv_key
 
 # run desired function
-getattr(todo, args[0])(args)
+getattr(todo, args[0])(args[1:])
 
-args = ["create_batch", priv_key]        
-batch_list_bytes = getattr(skltn, args[0])(args)
-
+batch_list_bytes = todo.create_batch(priv_key)
 send_it(batch_list_bytes)
 
 #subprocess.run(["docker-compose", "-f" "../sawtooth-default.yaml", "down"])

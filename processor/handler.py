@@ -91,7 +91,7 @@ def _create_task(payload, signer, timestamp, state):
     if any(task == payload.name for task in sprint.task_names)
         raise InvalidTransaction(
             "This task name is already in use.")
-        
+
     # we made it here, it's all good. create the object
     task = Task (
         project_name = project_name,
