@@ -174,7 +174,7 @@ def _progress_task(payload, signer, timestamp, state):
                     new_task_container.append(task)
                     _set_container(state, task_address, new_task_container)
                     return
-                
+
 
 def _edit_task(payload, signer, timestamp, state):
     project_name = payload.project_name
