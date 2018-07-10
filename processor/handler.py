@@ -217,21 +217,20 @@ def _unpack_transaction(transaction, state):
     return signer, timestamp, payload, handler
 
 
-#TODO: Notice how this only ever returns the first of the potentially many entries
 def _get_container(state, address):
-    namespace = address[6:8] 
+    tag = address[6:8] # tag bits that designate the type of node
 
     containers = {
         addressing.PROJECT_METANODE : ProjectNodeContainer,
         addressing.SPRINT_METANODE : SprintNodeContainer,
         addressing.TODO_TASK : TaskContainer,
     }
-    container = containers[namespace]()
-    entries = state.get_state([address])    
+    container = containers[tag]() #initialize the correct type of container based on the tag
+    entries = state.get_state([address]) # get the state using the address
 
     if entries:
-        data = entries[0].data          # get the first address in a list of them
-        container.ParseFromString(data) # it looks like some encoded data
+        data = entries[0].data          # extract the data from the state
+        container.ParseFromString(data) # decode data and store in container
 
     return container    
 
