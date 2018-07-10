@@ -134,49 +134,68 @@ def _create_project(payload, signer, timestamp, state):
     project_container.entries.append(project_node)
     #set state with new project included
     _set_container(state,project_node_address,project_container)
-    # todo initialize first sprint node
 
-
-def _edit_task(payload, signer, timestamp, state):
-
-def _increment_sprint(payload, signer, timestamp, state):
-    project_name = payload.project_name
-    current_sprint = _get_project_node(project_name).current_sprint
-    # make address of sprint metanode
-    sprint_node_address = addressing.make_sprint_node_address(project_name,current_sprint+1)
-
-    # get the current sprints at the address
+    # initialize first sprint node
     sprint_container = _get_container(state, sprint_node_address)
     if not sprint_container:  # if no container exists, create one
         sprint_container = SprintNodeContainer(entries=[])
 
+
+def _progress_task(payload, signer, timestamp, state):
+    project_name = payload.project_name
+    # verify transaction is signed by authorized key
+    _verify_contributor(signer, project_name)
+
+def _edit_task(payload, signer, timestamp, state):
+    project_name = payload.project_name
+    # verify transaction is signed by authorized key
+    _verify_contributor(signer, project_name)
+
+def _increment_sprint(payload, signer, timestamp, state):
+    project_name = payload.project_name
+    # verify transaction is signed by authorized key
+    _verify_contributor(signer, project_name)
+
+    current_sprint = _get_project_node(state, project_name).current_sprint
+    # make address of sprint metanode
+    sprint_node_address = addressing.make_sprint_node_address(project_name,current_sprint+1)
+
+    # get the current sprint nodes at the address
+    sprint_container = _get_container(state, sprint_node_address)
+    if not sprint_container:  # if no container exists, create one
+        sprint_container = SprintNodeContainer(entries=[])
     #get past task names list from previous metanode
-    task_names = _get_current_sprint_node(project_name).task_names
+    task_names = _get_current_sprint_node(state,project_name).task_names
     # create the metanode protobuf object
     sprint_node = SprintNode(
         project_name = project_name,
         task_names = task_names)  # add tasks added in past
-
     # add sprint to container
     sprint_container.entries.append(sprint_node)
     # set state with new project included
     _set_container(state, sprint_node_address, sprint_container)
 
-    for name in task_names:
-        task_container = _get_container(addressing.make_task_address
+    for name in task_names: # go through every task in previous sprint
+        #get container where task would be if it is done
+        task_container = _get_container(state,addressing.make_task_address(project_name,current_sprint,name,3))
+        if not task_container: #if container doesn't exist, copy over all copies of task
+            copy_task_new_sprint(state, project_name, current_sprint, name)
+        elif not any(name == task.name for task in task_container.entries): #if container exists, but
+            copy_task_new_sprint(state, project_name, current_sprint, name)
 
-        task_address = addressing.make_task_address(project_name,current_sprint,name)
 
 
 # add a public key to the list of those allowed to edit the project
 def _add_user(payload, signer, timestamp, state):
-    project_node = _get_project_node(payload.project_name)
+    _verify_owner(signer,payload.project_name)
+    project_node = _get_project_node(state,payload.project_name)
     project_node.public_keys.extend([payload.public_key]) 
 
 
 # remove a public key from the list of those allowed to edit the project
 def _remove_user(payload, signer, timestamp, state):
-    project_node = _get_project_node(payload.project_name)
+    _verify_owner(signer, payload.project_name)
+    project_node = _get_project_node(state,payload.project_name)
     project_node.public_keys.remove([payload.public_key])
 
 
@@ -236,7 +255,7 @@ def _get_container(state, address):
 
 
 def _set_container(state, address, container):
-   try:
+    try:
         addresses = state.set_state({
         address: container.SerializeToString()
         })
@@ -248,7 +267,7 @@ def _set_container(state, address, container):
             'State error, likely using wrong in/output fields in tx header.')
 
 
-def _get_project_node(project_name):
+def _get_project_node(state, project_name):
     # make address of project metanode
     project_node_address = addressing.make_project_node_address(project_name)
 
@@ -262,7 +281,7 @@ def _get_project_node(project_name):
     return None 
 
 
-def _get_sprint_node(project_name,sprint):
+def _get_sprint_node(state,project_name,sprint):
     # make address of project metanode
     sprint_node_address = addressing.make_sprint_node_address(project_name,sprint)
 
@@ -277,25 +296,39 @@ def _get_sprint_node(project_name,sprint):
     return None
 
 
-def _get_current_sprint_node(project_name):
-    project_node = _get_project_node(project_name)
+def _get_current_sprint_node(state,project_name):
+    project_node = _get_project_node(state,project_name)
     if project_node:
-        sprint_node = _get_sprint_node(project_name, project_node.current_sprint)
+        sprint_node = _get_sprint_node(state,project_name, project_node.current_sprint)
         return sprint_node
 
     return None
 
-
-# Any potential verification functions
-
-def _verify_signer(signer, project_name):
+def _verify_contributor(signer, project_name):
     # check to see that the signer is in the project node's list of authorized signers
-    # verify project name
-    address = make_project_node_address(project_name)
-    if all(agent.public_key != public_key for agent in container.entries):
-    if all(pk in thing for keys in list of keys)
-    if any(agent.public_key == public_key for agent in container.entries):
+    auth_keys = _get_project_node(project_name).public_keys
+    if not any(signer == key for key in auth_keys):
+        raise InvalidTransaction(
+            'Signer not authorized as a contributor')
 
+def _verify_owner(signer,project_name):
+    # check to see that the signer is the creator of the project
+    # i.e. they are the first in the list of authorized signers
+    auth_keys = _get_project_node(project_name).public_keys
+    if not signer == auth_keys[1]:
+        raise InvalidTransaction(
+            'Signer not authorized as a contributor')
+
+def copy_task_new_sprint(state, project_name,current_sprint,name):
+    for progress in range(0, 3):
+        copy_container = _get_container(state,
+            addressing.make_task_address(project_name, current_sprint, name, progress))
+        if copy_container:
+            for task in copy_container.entries:  # if copy container exists, copy task with desired name to new location
+                if task.name == name:
+                    _set_container(state,
+                        addressing.make_task_address(project_name, current_sprint + 1, name, task.stage),
+                        TaskContainer(entries=[task]))
 
 TYPE_TO_ACTION_HANDLER = { 
     Payload.CREATE_PROJECT: ('create_project', _create_project),
