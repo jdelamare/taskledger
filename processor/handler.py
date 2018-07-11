@@ -98,7 +98,7 @@ def _create_task(payload, signer, timestamp, state):
 
     for sprint_node in sprint_container.entries: 
         if sprint_node.project_name == payload.project_name:
-            if any(task == payload.task_name for task in sprint_node.task_names)
+            if any(task == payload.task_name for task in sprint_node.task_names):
                 raise InvalidTransaction(
                     "This task name is already in use.")
 
@@ -110,7 +110,7 @@ def _create_task(payload, signer, timestamp, state):
         timestamp = timestamp)
  
     # create the task
-    address = _make_task_address(payload.project_name, current_sprint, payload.task_name)
+    address = addressing.make_task_address(payload.project_name, current_sprint, payload.task_name)
 
     container = _get_container(state, address)
 
