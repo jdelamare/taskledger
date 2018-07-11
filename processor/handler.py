@@ -244,56 +244,57 @@ def _increment_sprint(payload, signer, timestamp, state):
     # verify transaction is signed by authorized key
     _verify_contributor(signer, payload.project_name)
 
-    #find the current sprint number
+    # find the current sprint number
     current_sprint = _get_project_node(state, payload.project_name).current_sprint
+    # get past task names list from previous sprint node
+    task_names = _get_current_sprint_node(state, payload.project_name).task_names
+    # new list of unfinished tasks to be transferred
+    new_task_names = []
+    for task_name in task_names:
+        # get task container
+        task_address = addressing.make_task_address(payload.project_name,current_sprint,task_name)
+        task_container = _get_container(state, task_address)
+        #find task with correct name
+        for task in task_container.entries:
+            if task.task_name == task_name:
+                # if task is not complete, copy to new sprint
+                if task.progress != 3:
+                    new_task_names.append(task_name)
+                    new_task_address = addressing.make_task_address(payload.project_name, current_sprint + 1,task_name)
+                    new_task_container = _get_container(state, new_task_address)
+                    # if the container does not exist, create it
+                    if not new_task_container:
+                        new_task_container = TaskContainer(entries=[])
+                    # add the task to the new sprint and set state
+                    new_task_container.entries.append(task)
+                    _set_container(state,new_task_address,new_task_container)
+
+
     # make address of new sprint metanode
     new_sprint_node_address = addressing.make_sprint_node_address(payload.project_name,current_sprint+1)
-    # get the container of the new address
     sprint_container = _get_container(state, new_sprint_node_address)
     # if no container exists, create one
     if not sprint_container:
         sprint_container = SprintNodeContainer(entries=[])
-
     # create the new sprint node
     sprint_node = SprintNode(
         project_name = payload.project_name,
-        task_names = [])
-    # add sprint to container
+        task_names = new_task_names)
+    # add sprint to container and set state
     sprint_container.entries.append(sprint_node)
+    _set_container(state,new_sprint_node_address,sprint_container)
 
-    # get past task names list from previous sprint node
-    task_names = _get_current_sprint_node(state, payload.project_name).task_names
-
-    for name in task_names: # go through every task in previous sprint
-        #get container where task would be if it is done
-        task_container = _get_container(state,addressing.make_task_address(project_name,current_sprint,name,3))
-        if not task_container: #if container doesn't exist, copy over all copies of task
-            copy_task_new_sprint(state, project_name, current_sprint, name)
-        elif not any(name == task.task_name for task in task_container.entries): #if container exists, but
-            copy_task_new_sprint(state, project_name, current_sprint, name)
     # make address of project metanode
-    project_node_address = addressing.make_project_node_address(project_name)
+    project_node_address = addressing.make_project_node_address(payload.project_name)
 
-    # get the current projects
+    # get the container
     project_container = _get_container(state, project_node_address)
-
-    for project_node in project_container.entries: #find project with correct name
-        if project_node.project_name == project_name:
-            return project_node 
-
-    return None
-
-def copy_task_new_sprint(state, project_name,current_sprint,name):
-    for progress in range(0, 3):
-        copy_container = _get_container(state,
-            addressing.make_task_address(project_name, current_sprint, name, progress))
-        if copy_container:
-            for task in copy_container.entries:  # if copy container exists, copy task with desired name to new location
-                if task.task_name == name:
-                    _set_container(state,
-                        addressing.make_task_address(project_name, current_sprint + 1, name, task.stage),
-                        TaskContainer(entries=[task]))
-
+    # find project with correct name
+    for project_node in project_container.entries:
+        if project_node.project_name == payload.project_name:
+            # increment the sprint and set the state
+            project_node.current_sprint += 1
+            _set_container(state,project_node_address,project_container)
 
 # add a public key to the list of those allowed to edit the project
 def _add_user(payload, signer, timestamp, state):
