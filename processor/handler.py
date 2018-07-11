@@ -98,8 +98,9 @@ def _create_task(payload, signer, timestamp, state):
         timestamp = timestamp
     )
  
-    # can we pass `NOT_STARTED` here or must this be `0`?
-    address = make_task_address(project_name, project_node.current_sprint, payload.name, task.NOT_STARTED)
+    # TODO: can we pass `NOT_STARTED` here or must this be `0`?
+    address = make_task_address(project_name, project_node.current_sprint, 
+                                payload.name, task.NOT_STARTED)
     container = _get_container(state, address)
 
     container.entries.extend([task])       
@@ -165,16 +166,58 @@ def _increment_sprint(payload, signer, timestamp, state):
         task_address = addressing.make_item_address(project_name,current_sprint,name)
 
 
+
+
+
+    # make address of project metanode
+    project_node_address = addressing.make_project_node_address(project_name)
+
+    # get the current projects
+    project_container = _get_container(state, project_node_address)
+
+    for project_node in project_container.entries: #find project with correct name
+        if project_node.project_name == project_name:
+            return project_node 
+
+    return None 
+
+
 # add a public key to the list of those allowed to edit the project
 def _add_user(payload, signer, timestamp, state):
-    project_node = _get_project_node(payload.project_name)
-    project_node.public_keys.extend([payload.public_key]) 
+    if not payload.project_name:
+        raise InvalidTransaction(
+            "a project name must be provided")
+
+    address = addressing.make_project_node_address(project_name)
+    container = _get_container(state, address)
+    
+    project_node = None
+    
+    for entry in container.entries:
+        if entry.name == payload.project_name:
+            project_node = entry 
+
+    # verify user is legit
+    if any(existing.public_key == payload.public_key 
+        for existing in container.entries.public_keys):
+            raise InvalidTransaction(
+                "then the key already exists")
+            
+    if not public_key:
+        raise InvalidTransaction(
+            "a pk must be provided")
+
+    project_node.public_keys.extend([payload.public_key])
+
+    set_container(state, address, container)
 
 
 # remove a public key from the list of those allowed to edit the project
 def _remove_user(payload, signer, timestamp, state):
     project_node = _get_project_node(payload.project_name)
     project_node.public_keys.remove([payload.public_key])
+
+    set_container(state, #need address
 
 
 def _unpack_transaction(transaction, state):
@@ -258,6 +301,20 @@ def _get_project_node(project_name):
             return project_node 
 
     return None 
+
+
+def _set_project_node(project_name, project_node)
+    project_node_address = addressing.make_project_node_address(project_name)
+   
+    # need to get container again so that we can change the one entry
+    project_container = _get_container(state, project_node_address)
+
+    for entry in project_container.entries:
+        if entry.name == project_name:
+            entry = project_node #overwrite the existing entry with fresh
+
+    # we've updated the container
+    _set_container() 
 
 
 def _get_sprint_node(project_name,sprint):
