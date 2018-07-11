@@ -12,14 +12,13 @@ SPRINT_METANODE = '1'
 TODO_TASK = '2'
 
 
-def make_task_address(project_name,sprint,task_name,stage):
+def make_task_address(project_name,sprint,task_name):
     return (
         NAMESPACE
         + TODO_TASK
         + _hash(project_name)[:47]
         + sprint
         + _hash(task_name)
-        + stage
     )
 
 def make_project_node_address(project_name):

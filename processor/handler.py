@@ -81,21 +81,21 @@ def _create_task(payload, signer, timestamp, state):
  
     project_name = payload.project_name 
     project_node = get_project_node(project_name)
-    container = get_container(project_node) 
+    container = get_container(project_node)
 
     if all(legit_users.public_key != public_key for legit_users in container.entries):
         raise InvalidTransaction(
             "User must be authorized to make changes to this project")
 
     sprint = _get_current_sprint_node(project_name)
-    if any(task == payload.name for task in sprint.task_names)
+    if any(task == payload.task_name for task in sprint.task_names)
         raise InvalidTransaction(
             "This task name is already in use.")
 
     # we made it here, it's all good. create the object
     task = Task (
         project_name = project_name,
-        name = payload.name 
+        name = payload.task_name
         description = payload.description
         timestamp = timestamp
     )
@@ -111,9 +111,13 @@ def _create_task(payload, signer, timestamp, state):
 
 
 def _create_project(payload, signer, timestamp, state):
-    project_name = payload.project_name
+    # check for complete payload
+    if not payload.project_name:
+        raise InvalidTransaction(
+            "a project name must be provided")
+
     # make address of project metanode
-    project_node_address = addressing.make_project_node_address(project_name)
+    project_node_address = addressing.make_project_node_address(payload.project_name)
 
     # get the current projects
     project_container = _get_container(state,project_node_address)
@@ -121,14 +125,14 @@ def _create_project(payload, signer, timestamp, state):
         project_container = ProjectNodeContainer(entries=[])
 
     #check to see if a project already exists under the same name
-    if any(project_node.project_name == project_name
-           for project_node in container.entries):
+    if any(project_node.project_name == payload.project_name
+           for project_node in project_container.entries):
         raise InvalidTransaction(
             'Project with this name already exists.')
 
     # create the metanode protobuf object
     project_node = ProjectNode(
-        project_name = project_name,
+        project_name = payload.project_name,
         public_keys = [signer], #add creator of project to authorized public key list
         current_sprint = 0)
     #add project to container
@@ -137,102 +141,123 @@ def _create_project(payload, signer, timestamp, state):
     _set_container(state,project_node_address,project_container)
 
     # initialize first sprint node
+    sprint_node_address = addressing.make_sprint_node_address(payload.project_name, 0)
     sprint_container = _get_container(state, sprint_node_address)
     if not sprint_container:  # if no container exists, create one
         sprint_container = SprintNodeContainer(entries=[])
+    sprint_node = SprintNode(
+        project_name=payload.project_name,
+        task_names=[])
+    sprint_container.entries.append(sprint_node)
+    _set_container(state,sprint_node_address,sprint_container)
+
 
 
 def _progress_task(payload, signer, timestamp, state):
-    project_name = payload.project_name
+    # check for complete payload
+    if not payload.project_name:
+        raise InvalidTransaction(
+            "a project name must be provided")
+    if not payload.task_name:
+        raise InvalidTransaction(
+            "a task name must be provided")
     # verify transaction is signed by authorized key
-    _verify_contributor(signer, project_name)
+    _verify_contributor(signer, payload.project_name)
 
-    #check if task is done
+    # make task address
     task_address = addressing.make_task_address(payload.project_name,
                                                 _get_project_node(payload.project_name).current_sprint,
-                                                payload.name, 3)
+                                                payload.task_name)
+    # get the container with tasks at this address
     task_container = _get_container(state, task_address)
-    if any(payload.name == task.name for task in task_container.entries):
+    # check if it doesn't exist
+    if not task_container:
         raise InvalidTransaction(
-                                 'Task already complete')
-
-    for progress in range(1, 4):
-        # go backwards through progress 2 to 0 and check to see if the task exists
-        # if it does, copy it to the next progress level
-        task_address = addressing.make_task_address(payload.project_name,
-                                                    _get_project_node(payload.project_name).current_sprint,
-                                                    payload.name, 3 - progress)
-        task_container = _get_container(state, task_address)
-        if task_container:
-            for task in task_container.entries:
-                if task.name == payload.name:
-                    new_task_container = _get_container(state,
-                                                        addressing.make_task_address(payload.project_name,
-                                                    _get_project_node(payload.project_name).current_sprint,
-                                                    payload.name, 4 - progress))
-                    if not new_task_container:
-                        new_task_container = TaskContainer(entries=[])
-                    new_task_container.append(task)
-                    _set_container(state, task_address, new_task_container)
-                    return
+            "task with specified name does not exist")
+    # find the task with the correct name
+    for task in task_container.entries:
+        if task.task_name == payload.task_name:
+            # check if the task is already complete
+            if task.progress==task.DONE:
+                raise InvalidTransaction(
+                    "task already complete")
+            # increase progression level of task
+            task.progress += 1
+            # set the new state
+            _set_container(state,task_address,task_container)
+            return
+    # if task with specified name not found, reject transaction
+    raise InvalidTransaction(
+        "task with specified name does not exist")
 
 
 def _edit_task(payload, signer, timestamp, state):
-    project_name = payload.project_name
+    # check for complete payload
+    if not payload.project_name:
+        raise InvalidTransaction(
+            "a project name must be provided")
+    if not payload.task_name:
+        raise InvalidTransaction(
+            "a task name must be provided")
     # verify transaction is signed by authorized key
-    _verify_contributor(signer, project_name)
-
-    for progress in range(0,4):
-        # go backwards through progress 3 to 0 and check to see if the task exists, changing description if it does
-        task_address = addressing.make_task_address(payload.project_name,
+    _verify_contributor(signer, payload.project_name)
+    # make task address
+    task_address = addressing.make_task_address(payload.project_name,
                                                 _get_project_node(payload.project_name).current_sprint,
-                                                payload.name,3-progress)
-        task_container = _get_container(state,task_address)
-        if task_container:
-            for task in task_container.entries:
-                if task.name == payload.name:
-                    task.description = payload.description
-                    _set_container(state,task_address,task_container)
-                    return
+                                                payload.task_name)
+    # get the container with tasks at this address
+    task_container = _get_container(state,task_address)
+    # check if it doesn't exist
+    if not task_container:
+        raise InvalidTransaction(
+            "task with specified name does not exist")
+    # find the task with the correct name
+    for task in task_container.entries:
+        if task.task_name == payload.task_name:
+            # set the new description and put it in state
+            task.description = payload.description
+            _set_container(state, task_address, task_container)
+            return
+    # if task with specified name not found, reject transaction
+    raise InvalidTransaction(
+        "task with specified name does not exist")
 
 
 def _increment_sprint(payload, signer, timestamp, state):
-    project_name = payload.project_name
+    # check for complete payload
+    if not payload.project_name:
+        raise InvalidTransaction(
+            "a project name must be provided")
     # verify transaction is signed by authorized key
-    _verify_contributor(signer, project_name)
+    _verify_contributor(signer, payload.project_name)
 
-    current_sprint = _get_project_node(state, project_name).current_sprint
-    # make address of sprint metanode
-    sprint_node_address = addressing.make_sprint_node_address(project_name,current_sprint+1)
-
-    # get the current sprint nodes at the address
-    sprint_container = _get_container(state, sprint_node_address)
-    if not sprint_container:  # if no container exists, create one
+    #find the current sprint number
+    current_sprint = _get_project_node(state, payload.project_name).current_sprint
+    # make address of new sprint metanode
+    new_sprint_node_address = addressing.make_sprint_node_address(payload.project_name,current_sprint+1)
+    # get the container of the new address
+    sprint_container = _get_container(state, new_sprint_node_address)
+    # if no container exists, create one
+    if not sprint_container:
         sprint_container = SprintNodeContainer(entries=[])
-    #get past task names list from previous metanode
-    task_names = _get_current_sprint_node(state,project_name).task_names
-    # create the metanode protobuf object
+
+    # create the new sprint node
     sprint_node = SprintNode(
-        project_name = project_name,
-        task_names = task_names)  # add tasks added in past
+        project_name = payload.project_name,
+        task_names = [])
     # add sprint to container
     sprint_container.entries.append(sprint_node)
-    # set state with new project included
-    _set_container(state, sprint_node_address, sprint_container)
+
+    # get past task names list from previous sprint node
+    task_names = _get_current_sprint_node(state, payload.project_name).task_names
 
     for name in task_names: # go through every task in previous sprint
         #get container where task would be if it is done
         task_container = _get_container(state,addressing.make_task_address(project_name,current_sprint,name,3))
         if not task_container: #if container doesn't exist, copy over all copies of task
             copy_task_new_sprint(state, project_name, current_sprint, name)
-        elif not any(name == task.name for task in task_container.entries): #if container exists, but
+        elif not any(name == task.task_name for task in task_container.entries): #if container exists, but
             copy_task_new_sprint(state, project_name, current_sprint, name)
-
-
-
-
-
-
     # make address of project metanode
     project_node_address = addressing.make_project_node_address(project_name)
 
@@ -243,7 +268,18 @@ def _increment_sprint(payload, signer, timestamp, state):
         if project_node.project_name == project_name:
             return project_node 
 
-    return None 
+    return None
+
+def copy_task_new_sprint(state, project_name,current_sprint,name):
+    for progress in range(0, 3):
+        copy_container = _get_container(state,
+            addressing.make_task_address(project_name, current_sprint, name, progress))
+        if copy_container:
+            for task in copy_container.entries:  # if copy container exists, copy task with desired name to new location
+                if task.task_name == name:
+                    _set_container(state,
+                        addressing.make_task_address(project_name, current_sprint + 1, name, task.stage),
+                        TaskContainer(entries=[task]))
 
 
 # add a public key to the list of those allowed to edit the project
@@ -258,7 +294,7 @@ def _add_user(payload, signer, timestamp, state):
     project_node = None
     
     for entry in container.entries:
-        if entry.name == payload.project_name:
+        if entry.task_name == payload.project_name:
             project_node = entry 
 
     # verify user is legit
@@ -374,7 +410,7 @@ def _set_project_node(project_name, project_node)
     project_container = _get_container(state, project_node_address)
 
     for entry in project_container.entries:
-        if entry.name == project_name:
+        if entry.task_name == project_name:
             entry = project_node #overwrite the existing entry with fresh
 
     # we've updated the container
@@ -419,16 +455,7 @@ def _verify_owner(signer,project_name):
         raise InvalidTransaction(
             'Signer not authorized as a contributor')
 
-def copy_task_new_sprint(state, project_name,current_sprint,name):
-    for progress in range(0, 3):
-        copy_container = _get_container(state,
-            addressing.make_task_address(project_name, current_sprint, name, progress))
-        if copy_container:
-            for task in copy_container.entries:  # if copy container exists, copy task with desired name to new location
-                if task.name == name:
-                    _set_container(state,
-                        addressing.make_task_address(project_name, current_sprint + 1, name, task.stage),
-                        TaskContainer(entries=[task]))
+
 
 TYPE_TO_ACTION_HANDLER = { 
     Payload.CREATE_PROJECT: ('create_project', _create_project),

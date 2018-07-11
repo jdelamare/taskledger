@@ -10,13 +10,15 @@ message Task {
   }
   string project_name = 1;
   // name of task, used as identifier
-  string name = 2;
+  string task_name = 2;
 
   // A =description of the task
   string description = 3;
 
   // Unix UTC timestamp of approximately when this task was registered
   uint64 timestamp = 4;
+
+  Progress progress = 5;
 }
 
 message TaskContainer {
