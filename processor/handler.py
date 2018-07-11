@@ -70,7 +70,7 @@ class SkltnTransactionHandler(TransactionHandler):
 
 # TODO: change name to task_name
 def _create_task(payload, signer, timestamp, state):
-    if not payload.name:
+    if not payload.task_name:
         raise InvalidTransaction(
             'Task must have a name.'
     )
@@ -83,16 +83,13 @@ def _create_task(payload, signer, timestamp, state):
 
     # check if pk is authorized 
     project_address = addressing.make_project_node_address(payload.project_name)
-
-    project_container = _get_container(state, address) 
+    project_container = _get_container(state, project_address) 
 
     # inside a list of projects there is a list of keys. check 'em
     for project_node in project_container.entries: 
         if project_node.project_name == payload.project_name:
+            _verify_contributor(signer, payload.project_name)
             current_sprint = project_node.current_sprint
-            if not any(existing_pk != public_key for existing_pk in project_node.public_keys):
-                raise InvalidTransaction(
-                    "User must be authorized to make changes to this project")
     
     # check that the task doesn't already exist
     sprint_address = addressing.make_sprint_node_address(payload.project_name)
@@ -101,20 +98,19 @@ def _create_task(payload, signer, timestamp, state):
 
     for sprint_node in sprint_container.entries: 
         if sprint_node.project_name == payload.project_name:
-            if any(task == payload.name for task in sprint_node.task_names)
+            if any(task == payload.task_name for task in sprint_node.task_names)
                 raise InvalidTransaction(
                     "This task name is already in use.")
 
     # we made it here, it's all good. create the object
     task = Task (
         project_name = payload.project_name,
-        name = payload.name,
+        task_name = payload.task_name,
         description = payload.description,
-        timestamp = timestamp,
-    )
+        timestamp = timestamp)
  
     # create the task
-    address = make_task_address(payload.project_name, current_sprint, payload.name)
+    address = make_task_address(payload.project_name, current_sprint, payload.task_name)
 
     container = _get_container(state, address)
 
@@ -122,48 +118,51 @@ def _create_task(payload, signer, timestamp, state):
 
     set_container(state, address, container)
 
-
+""" creating a project involves creating a first sprint"""
 def _create_project(payload, signer, timestamp, state):
+    FIRST_SPRINT = 0
     # check for complete payload
     if not payload.project_name:
         raise InvalidTransaction(
-            "a project name must be provided")
+            "Project must have a name")
 
-    # make address of project metanode
-    project_node_address = addressing.make_project_node_address(payload.project_name)
+    project_address = addressing.make_project_node_address(payload.project_name)
+    project_container = _get_container(state,project_address)
 
-    # get the current projects
-    project_container = _get_container(state,project_node_address)
     if not project_container: #if no container exists, create one
         project_container = ProjectNodeContainer(entries=[])
 
     #check to see if a project already exists under the same name
     if any(project_node.project_name == payload.project_name
-           for project_node in project_container.entries):
-        raise InvalidTransaction(
-            'Project with this name already exists.')
+        for project_node in project_container.entries):
+            raise InvalidTransaction(
+                'Project with this name already exists.')
 
     # create the metanode protobuf object
     project_node = ProjectNode(
         project_name = payload.project_name,
         public_keys = [signer], #add creator of project to authorized public key list
         current_sprint = 0)
+
     #add project to container
     project_container.entries.append(project_node)
     #set state with new project included
-    _set_container(state,project_node_address,project_container)
+    _set_container(state,project_address,project_container)
 
     # initialize first sprint node
-    sprint_node_address = addressing.make_sprint_node_address(payload.project_name, 0)
+    sprint_node_address = addressing.make_sprint_node_address(payload.project_name, FIRST_SPRINT)
     sprint_container = _get_container(state, sprint_node_address)
+
     if not sprint_container:  # if no container exists, create one
         sprint_container = SprintNodeContainer(entries=[])
+    
     sprint_node = SprintNode(
         project_name=payload.project_name,
         task_names=[])
+    
     sprint_container.entries.append(sprint_node)
+    
     _set_container(state,sprint_node_address,sprint_container)
-
 
 
 def _progress_task(payload, signer, timestamp, state):
@@ -301,38 +300,56 @@ def _add_user(payload, signer, timestamp, state):
         raise InvalidTransaction(
             "a project name must be provided")
 
+    _verify_owner(signer, payload.project_name)
+
     address = addressing.make_project_node_address(project_name)
     container = _get_container(state, address)
     
     project_node = None
     
     for entry in container.entries:
-        if entry.task_name == payload.project_name:
+        if entry.project_name == payload.project_name:
             project_node = entry 
 
     # verify user is legit
     if any(existing.public_key == payload.public_key 
         for existing in container.entries.public_keys):
             raise InvalidTransaction(
-                "then the key already exists")
+                "This user's public key is already registered")
             
     if not public_key:
         raise InvalidTransaction(
             "a pk must be provided")
 
-    project_node.public_keys.extend([payload.public_key])
+    project_node.public_keys.append(payload.public_key)
 
     set_container(state, address, container)
 
 
 # remove a public key from the list of those allowed to edit the project
 def _remove_user(payload, signer, timestamp, state):
+    if not payload.project_name:
+        raise InvalidTransaction(
+            "a project name must be provided")
     _verify_owner(signer, payload.project_name)
-    project_node = _get_project_node(state,payload.project_name)
-    project_node.public_keys.remove([payload.public_key])
 
-    set_container(state, #need address
+    address = addressing.make_project
+    container = _get_container(state, address)
+    
+    project_node = None 
 
+    for entry in container.entries:
+        if entry.task_name == payload.project_name:
+            project_node = entry
+
+    if any(existing.public_key != payload.public_key
+        for existing in container.entries.public_keys):
+            raise InvalidTransaction(
+                "The user's public key does not exist to be removed.")
+
+    project_node.public_keys.remove(payload.public_key)
+
+    set_container(state, address, container)
 
 def _unpack_transaction(transaction, state):
     '''Return the transaction signing key, the SCPayload timestamp, the
@@ -452,6 +469,8 @@ def _get_current_sprint_node(state,project_name):
         return sprint_node
 
     return None
+
+def _get_current_sprint
 
 def _verify_contributor(signer, project_name):
     # check to see that the signer is in the project node's list of authorized signers
