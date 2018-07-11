@@ -7,6 +7,7 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
+from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -18,8 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='task.proto',
   package='',
   syntax='proto3',
-  serialized_options=None,
-  serialized_pb=_b('\n\ntask.proto\"\x97\x01\n\x04Task\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x11\n\ttimestamp\x18\x04 \x01(\x04\"C\n\x08Progress\x12\x0f\n\x0bNOT_STARTED\x10\x00\x12\x0f\n\x0bIN_PROGRESS\x10\x01\x12\x0b\n\x07TESTING\x10\x02\x12\x08\n\x04\x44ONE\x10\x03\"\'\n\rTaskContainer\x12\x16\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\x05.Taskb\x06proto3')
+  serialized_pb=_b('\n\ntask.proto\"\xbe\x01\n\x04Task\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x11\n\ttimestamp\x18\x04 \x01(\x04\x12 \n\x08progress\x18\x05 \x01(\x0e\x32\x0e.Task.Progress\"C\n\x08Progress\x12\x0f\n\x0bNOT_STARTED\x10\x00\x12\x0f\n\x0bIN_PROGRESS\x10\x01\x12\x0b\n\x07TESTING\x10\x02\x12\x08\n\x04\x44ONE\x10\x03\"\'\n\rTaskContainer\x12\x16\n\x07\x65ntries\x18\x01 \x03(\x0b\x32\x05.Taskb\x06proto3')
 )
 
 
@@ -32,25 +32,25 @@ _TASK_PROGRESS = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='NOT_STARTED', index=0, number=0,
-      serialized_options=None,
+      options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='IN_PROGRESS', index=1, number=1,
-      serialized_options=None,
+      options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='TESTING', index=2, number=2,
-      serialized_options=None,
+      options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='DONE', index=3, number=3,
-      serialized_options=None,
+      options=None,
       type=None),
   ],
   containing_type=None,
-  serialized_options=None,
-  serialized_start=99,
-  serialized_end=166,
+  options=None,
+  serialized_start=138,
+  serialized_end=205,
 )
 _sym_db.RegisterEnumDescriptor(_TASK_PROGRESS)
 
@@ -68,28 +68,35 @@ _TASK = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='name', full_name='Task.name', index=1,
+      name='task_name', full_name='Task.task_name', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='description', full_name='Task.description', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp', full_name='Task.timestamp', index=3,
       number=4, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='progress', full_name='Task.progress', index=4,
+      number=5, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -97,14 +104,14 @@ _TASK = _descriptor.Descriptor(
   enum_types=[
     _TASK_PROGRESS,
   ],
-  serialized_options=None,
+  options=None,
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
   serialized_start=15,
-  serialized_end=166,
+  serialized_end=205,
 )
 
 
@@ -121,23 +128,24 @@ _TASKCONTAINER = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  serialized_options=None,
+  options=None,
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=168,
-  serialized_end=207,
+  serialized_start=207,
+  serialized_end=246,
 )
 
+_TASK.fields_by_name['progress'].enum_type = _TASK_PROGRESS
 _TASK_PROGRESS.containing_type = _TASK
 _TASKCONTAINER.fields_by_name['entries'].message_type = _TASK
 DESCRIPTOR.message_types_by_name['Task'] = _TASK
