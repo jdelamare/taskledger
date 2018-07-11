@@ -68,6 +68,7 @@ class SkltnTransactionHandler(TransactionHandler):
 
 # Handler functions
 
+# TODO: change name to task_name
 def _create_task(payload, signer, timestamp, state):
     if not payload.name:
         raise InvalidTransaction(
@@ -78,31 +79,43 @@ def _create_task(payload, signer, timestamp, state):
          raise InvalidTransaction(
             'Task must have a description.'
     )
- 
-    project_name = payload.project_name 
-    project_node = get_project_node(project_name)
-    container = get_container(project_node) 
+    current_sprint = None
 
-    if all(legit_users.public_key != public_key for legit_users in container.entries):
-        raise InvalidTransaction(
-            "User must be authorized to make changes to this project")
+    # check if pk is authorized 
+    project_address = addressing.make_project_node_address(payload.project_name)
 
-    sprint = _get_current_sprint_node(project_name)
-    if any(task == payload.name for task in sprint.task_names)
-        raise InvalidTransaction(
-            "This task name is already in use.")
+    project_container = _get_container(state, address) 
+
+    # inside a list of projects there is a list of keys. check 'em
+    for project_node in project_container.entries: 
+        if project_node.project_name == payload.project_name:
+            current_sprint = project_node.current_sprint
+            if not any(existing_pk != public_key for existing_pk in project_node.public_keys):
+                raise InvalidTransaction(
+                    "User must be authorized to make changes to this project")
+    
+    # check that the task doesn't already exist
+    sprint_address = addressing.make_sprint_node_address(payload.project_name)
+
+    sprint_container = _get_container(state, address)
+
+    for sprint_node in sprint_container.entries: 
+        if sprint_node.project_name == payload.project_name:
+            if any(task == payload.name for task in sprint_node.task_names)
+                raise InvalidTransaction(
+                    "This task name is already in use.")
 
     # we made it here, it's all good. create the object
     task = Task (
-        project_name = project_name,
-        name = payload.name 
-        description = payload.description
-        timestamp = timestamp
+        project_name = payload.project_name,
+        name = payload.name,
+        description = payload.description,
+        timestamp = timestamp,
     )
  
-    # TODO: can we pass `NOT_STARTED` here or must this be `0`?
-    address = make_task_address(project_name, project_node.current_sprint, 
-                                payload.name, task.NOT_STARTED)
+    # create the task
+    address = make_task_address(payload.project_name, current_sprint, payload.name)
+
     container = _get_container(state, address)
 
     container.entries.extend([task])       
