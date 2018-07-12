@@ -42,6 +42,7 @@ def _get_time():
 
 def _create_signer(private_key):
     signer = secp256k1.PrivateKey()
+    print("priv_key = " + str(private_key))
     signer.set_raw_privkey(bytes.fromhex(str(private_key)))
     return signer
     
@@ -54,10 +55,10 @@ class Todo():
         if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
-
         #create signer using given private key
-        private_key = args[0]
-        signer = _create_signer(private_key)
+        #private_key = args[0]
+        #signer = _create_signer(private_key)
+        signer = args[0]
 
         # bundle the action information
         action = CreateProjectAction(
@@ -82,9 +83,9 @@ class Todo():
             quit()
 
         #create signer using given private key
-        private_key = args[0]
-        signer = _create_signer(private_key)
-
+        #private_key = args[0]
+        #signer = _create_signer(private_key)
+        signer = args[0]
         # bundle the action information
         action = CreateTaskAction(
                 project_name = args[1],
@@ -249,8 +250,8 @@ class Todo():
             # In this example, we're signing the batch with the same private key,
             # but the batch can be signed by another party, in which case, the
             # public key will need to be associated with that key.          # make a global batch_public_key
-            # batcher_public_key = signer.pubkey.serialize().hex(), # must have been generated from the private key being used to sign the Batch, or validation will fail
-            batcher_public_key = _get_batcher_public_key(signer),
+            batcher_public_key = signer.pubkey.serialize().hex(), # must have been generated from the private key being used to sign the Batch, or validation will fail
+            # batcher_public_key = _get_batcher_public_key(signer),
             # In this example, there are no dependencies.  This list should include
             # an previous transaction header signatures that must be applied for
             # this transaction to successfully commit.
@@ -273,8 +274,8 @@ class Todo():
 
         self.txns.append(txn)
 
-    def create_batch(self, private_key):   # args [create_batch, private_key]
-        signer = _create_signer(private_key)
+    def create_batch(self, signer):   # args [create_batch, private_key]
+        #signer = _create_signer(private_key)
 
         batch_header_bytes = BatchHeader(
             signer_public_key = signer.pubkey.serialize().hex(),
@@ -317,12 +318,12 @@ args = sys.argv[1:]
 passcode = args[1]
 
 priv_key = hashlib.sha224(passcode.encode('utf-8')).hexdigest()
-args[1] = priv_key
+args[1] = _create_signer(priv_key)
 
 # run desired function
 getattr(todo, args[0])(args[1:])
 
-batch_list_bytes = todo.create_batch(priv_key)
+batch_list_bytes = todo.create_batch(args[1])
 send_it(batch_list_bytes)
 
 #subprocess.run(["docker-compose", "-f" "../sawtooth-default.yaml", "down"])

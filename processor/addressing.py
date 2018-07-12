@@ -7,9 +7,9 @@ FAMILY_NAME = 'todo'
 
 NAMESPACE = _hash(FAMILY_NAME)[:6] # namespace
 
-PROJECT_METANODE = '0' # tag character defines address type
-SPRINT_METANODE = '1'
-TODO_TASK = '2'
+PROJECT_METANODE = '00' # tag character defines address type
+SPRINT_METANODE = '01'
+TODO_TASK = '02'
 
 
 def make_task_address(project_name,sprint,task_name):

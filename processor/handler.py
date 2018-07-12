@@ -67,8 +67,6 @@ class SkltnTransactionHandler(TransactionHandler):
 
 
 # Handler functions
-
-# TODO: change name to task_name
 def _create_task(payload, signer, timestamp, state):
     if not payload.task_name:
         raise InvalidTransaction(
@@ -120,6 +118,7 @@ def _create_task(payload, signer, timestamp, state):
 
 """ creating a project involves creating a first sprint"""
 def _create_project(payload, signer, timestamp, state):
+    # raise InvalidTransaction('this is not working')
     FIRST_SPRINT = 0
     # check for complete payload
     if not payload.project_name:
@@ -145,7 +144,7 @@ def _create_project(payload, signer, timestamp, state):
         current_sprint = FIRST_SPRINT)
 
     #add project to container
-    project_container.entries.append(project_node)
+    project_container.entries.extend([project_node])
     #set state with new project included
     _set_container(state,project_address,project_container)
 
@@ -160,7 +159,7 @@ def _create_project(payload, signer, timestamp, state):
         project_name=payload.project_name,
         task_names=[])
     
-    sprint_container.entries.append(sprint_node)
+    sprint_container.entries.extend([sprint_node])
     
     _set_container(state,sprint_node_address,sprint_container)
 
@@ -258,14 +257,14 @@ def _increment_sprint(payload, signer, timestamp, state):
             if task.task_name == task_name:
                 # if task is not complete, copy to new sprint
                 if task.progress != task.DONE:
-                    new_task_names.append(task_name)
+                    new_task_names.extend([task_name])
                     new_task_address = addressing.make_task_address(payload.project_name, current_sprint + 1,task_name)
                     new_task_container = _get_container(state, new_task_address)
                     # if the container does not exist, create it
                     if not new_task_container:
                         new_task_container = TaskContainer(entries=[])
                     # add the task to the new sprint and set state
-                    new_task_container.entries.append(task)
+                    new_task_container.entries.extend([task])
                     _set_container(state,new_task_address,new_task_container)
 
 
@@ -280,7 +279,7 @@ def _increment_sprint(payload, signer, timestamp, state):
         project_name = payload.project_name,
         task_names = new_task_names)
     # add sprint to container and set state
-    sprint_container.entries.append(sprint_node)
+    sprint_container.entries.extend([sprint_node])
     _set_container(state,new_sprint_node_address,sprint_container)
 
     # make address of project metanode
@@ -322,7 +321,7 @@ def _add_user(payload, signer, timestamp, state):
             raise InvalidTransaction(
                 "This user's public key is already registered")
             
-    project_node.public_keys.append(payload.public_key)
+    project_node.public_keys.extend([payload.public_key])
 
     _set_container(state, address, container)
 
