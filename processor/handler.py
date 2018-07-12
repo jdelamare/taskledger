@@ -86,11 +86,11 @@ def _create_task(payload, signer, timestamp, state):
     # inside a list of projects there is a list of keys. check 'em
     for project_node in project_container.entries: 
         if project_node.project_name == payload.project_name:
-            _verify_contributor(signer, payload.project_name)
+            _verify_contributor(state,signer, payload.project_name)
             current_sprint = project_node.current_sprint
     
     # check that the task doesn't already exist
-    sprint_address = addressing.make_sprint_node_address(payload.project_name)
+    sprint_address = addressing.make_sprint_node_address(payload.project_name,str(current_sprint))
 
     sprint_container = _get_container(state, sprint_address)
 
@@ -462,9 +462,9 @@ def _get_current_sprint_node(state, project_name):
     return None
 
 
-def _verify_contributor(signer, project_name):
+def _verify_contributor(state,signer, project_name):
     # check to see that the signer is in the project node's list of authorized signers
-    auth_keys = _get_project_node(project_name).public_keys
+    auth_keys = _get_project_node(state,project_name).public_keys
     if not any(signer == key for key in auth_keys):
         raise InvalidTransaction(
             'Signer not authorized as a contributor')
