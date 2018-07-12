@@ -142,7 +142,7 @@ def _create_project(payload, signer, timestamp, state):
     project_node = ProjectNode(
         project_name = payload.project_name,
         public_keys = [signer], #add creator of project to authorized public key list
-        current_sprint = 0)
+        current_sprint = FIRST_SPRINT)
 
     #add project to container
     project_container.entries.append(project_node)

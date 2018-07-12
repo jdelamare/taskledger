@@ -25,7 +25,7 @@ from colorlog import ColoredFormatter
 from sawtooth_sdk.processor.core import TransactionProcessor
 from handler import SkltnTransactionHandler
 
-DISTRIBUTION_NAME = 'skltn'
+DISTRIBUTION_NAME = 'todo'
 
 
 def create_console_handler(verbose_level):

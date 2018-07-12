@@ -241,7 +241,7 @@ class Todo():
 
     def create_transaction(self, signer, payload_bytes):
         txn_header_bytes = TransactionHeader(
-            family_name='skltn',
+            family_name='todo',
             family_version='0.1',
             inputs=[addressing.NAMESPACE],
             outputs=[addressing.NAMESPACE],
@@ -304,7 +304,7 @@ def send_it(batch_list_bytes):
     resp = requests.post(url, data=payload, headers=headers)
     json_url = json.loads(resp.text)
     # print("Batch status link: \n\n" + json_url["link"] + "\n") # DEBUG
-    time.sleep(2)
+    time.sleep(10)
     resp = requests.get(json_url["link"])
     json_batch_status = json.loads(resp.text)
     print(json_batch_status["data"][0]["status"])
