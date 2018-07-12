@@ -120,8 +120,7 @@ class Todo():
             quit()
 
         #create signer using given private key
-        private_key = args[0]
-        signer = _create_signer(private_key)
+        signer = args[0]
 
         # bundle the action information
         action = ProgressTaskAction(
@@ -149,9 +148,7 @@ class Todo():
             quit()
 
         #create signer using given private key
-        private_key = args[0]
-        signer = _create_signer(private_key)
-
+        signer = args[0]
         # bundle the action information
         action = EditTaskAction(
                 project_name = args[1],
@@ -179,8 +176,7 @@ class Todo():
             quit()
 
         #create signer using given private key
-        private_key = args[0]
-        signer = _create_signer(private_key)
+        signer = args[0]
 
         # bundle the action information
         action = IncrementSprintAction(
@@ -207,8 +203,7 @@ class Todo():
             quit()
 
         #create signer using given private key
-        private_key = args[0]
-        signer = _create_signer(private_key)
+        signer = args[0]
 
         # bundle the action information
         action = AddUserAction(
@@ -217,7 +212,7 @@ class Todo():
         )
         # bundle the payload
         payload = Payload(
-            action = 1,
+            action = 5,
             timestamp = _get_time(),
             add_user = action,
         )
@@ -236,8 +231,7 @@ class Todo():
             quit()
 
         #create signer using given private key
-        private_key = args[0]
-        signer = _create_signer(private_key)
+        signer = args[0]
 
         # bundle the action information
         action = RemoveUserAction(
@@ -246,7 +240,7 @@ class Todo():
         )
         # bundle the payload
         payload = Payload(
-            action = 1,
+            action = 6,
             timestamp = _get_time(),
             remove_user = action,
         )
@@ -325,6 +319,10 @@ class Todo():
         project_name = args[1]
         project_node = getProjectNode(state,project_name)
         print('+++++++++++++++++++++Project:' + project_name + '+++++++++++++++++++++')
+        print("<<<<<<<<<<<<Public Keys:>>>>>>>>>>>>")
+        for pk in project_node.public_keys:
+            print(pk)
+        print("<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>")
         current_sprint = project_node.current_sprint
         for sprint in range(0,current_sprint+1):
             print('=================Sprint '+ str(sprint) + '=================')
@@ -338,6 +336,27 @@ class Todo():
                 print('---------------------------')
             print ("====================================================")
         print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+
+    def add_password(self, args):
+        if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            quit()
+            #creates public key from password
+            new_pass = args[2]
+            priv_key = hashlib.sha224(new_pass.encode('utf-8')).hexdigest()
+            args[2] = _create_signer(priv_key).pubkey.serialize().hex()
+        self.add_user(args)
+
+    def remove_password(self, args):
+        if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            quit()
+            #creates public key from password
+            new_pass = args[2]
+            priv_key = hashlib.sha224(new_pass.encode('utf-8')).hexdigest()
+            args[2] = _create_signer(priv_key).pubkey.serialize().hex()
+        self.remove_user(args)
+
 
 def send_it(batch_list_bytes):
     # ship it out and scrape
@@ -406,7 +425,6 @@ passcode = args[1]
 
 priv_key = hashlib.sha224(passcode.encode('utf-8')).hexdigest()
 args[1] = _create_signer(priv_key)
-
 # run desired function
 getattr(todo, args[0])(args[1:])
 

@@ -90,7 +90,7 @@ def _create_task(payload, signer, timestamp, state):
             current_sprint = project_node.current_sprint
     
     # check that the task doesn't already exist
-    sprint_address = addressing.make_sprint_node_address(payload.project_name,str(current_sprint))
+    sprint_address = addressing.make_sprint_node_address(payload.project_name,current_sprint)
 
     sprint_container = _get_container(state, sprint_address)
 
@@ -304,7 +304,7 @@ def _add_user(payload, signer, timestamp, state):
         raise InvalidTransaction(
             "a pk must be provided")
 
-    _verify_owner(signer, payload.project_name)
+    _verify_owner(state,signer, payload.project_name)
 
     address = addressing.make_project_node_address(payload.project_name)
     container = _get_container(state, address)
@@ -316,10 +316,10 @@ def _add_user(payload, signer, timestamp, state):
             project_node = entry 
 
     # verify user is legit
-    if any(existing.public_key == payload.public_key 
-        for existing in container.entries.public_keys):
-            raise InvalidTransaction(
-                "This user's public key is already registered")
+    if any(public_key == payload.public_key
+        for public_key in project_node.public_keys):
+        raise InvalidTransaction(
+            "This user's public key is already registered")
             
     project_node.public_keys.extend([payload.public_key])
 
@@ -336,7 +336,7 @@ def _remove_user(payload, signer, timestamp, state):
         raise InvalidTransaction(
             "a pk must be provided")
 
-    _verify_owner(signer, payload.project_name)
+    _verify_owner(state,signer, payload.project_name)
 
     address = addressing.make_project_node_address(payload.project_name)
     container = _get_container(state, address)
@@ -347,10 +347,11 @@ def _remove_user(payload, signer, timestamp, state):
         if entry.task_name == payload.project_name:
             project_node = entry
 
-    if any(existing.public_key != payload.public_key
-        for existing in container.entries.public_keys):
-            raise InvalidTransaction(
-                "The user's public key does not exist to be removed.")
+    # verify user is legit
+    if not any(public_key == payload.public_key
+           for public_key in project_node.public_keys):
+        raise InvalidTransaction(
+                "This user's public key is already registered")
 
     project_node.public_keys.remove(payload.public_key)
 
@@ -469,11 +470,11 @@ def _verify_contributor(state,signer, project_name):
         raise InvalidTransaction(
             'Signer not authorized as a contributor')
 
-def _verify_owner(signer,project_name):
+def _verify_owner(state,signer,project_name):
     # check to see that the signer is the creator of the project
     # i.e. they are the first in the list of authorized signers
-    auth_keys = _get_project_node(project_name).public_keys
-    if not signer == auth_keys[1]:
+    auth_keys = _get_project_node(state,project_name).public_keys
+    if not signer == auth_keys[0]:
         raise InvalidTransaction(
             'Signer not authorized as a contributor')
 
