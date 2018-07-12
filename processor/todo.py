@@ -16,6 +16,7 @@ import hashlib
 import subprocess
 import sys
 import secp256k1
+import base64
 import time
 import uuid
 import requests
@@ -23,6 +24,8 @@ import json
 import random
 from random import randint
 import sys
+import urllib.request, json
+
 
 # Sawtooth SDK
 from sawtooth_sdk.protobuf.transaction_pb2 import Transaction
@@ -32,6 +35,9 @@ from sawtooth_sdk.protobuf.batch_pb2 import BatchHeader
 from sawtooth_sdk.protobuf.batch_pb2 import BatchList
 
 from protobuf.payload_pb2 import *
+from protobuf.project_node_pb2 import *
+from protobuf.sprint_node_pb2 import *
+from protobuf.task_pb2 import *
 import addressing
 
 def _get_batcher_public_key(signer):
@@ -76,6 +82,8 @@ class Todo():
 
         # Pack it all up and ship it out
         self.create_transaction(signer, payload_bytes)
+        batch_list_bytes = self.create_batch(signer)
+        send_it(batch_list_bytes)
 
     def create_task(self, args):
         if not len(args) == 4: # make sure correct number of arguments are present for desired transaction
@@ -104,6 +112,8 @@ class Todo():
 
         # Pack it all up and ship it out
         self.create_transaction(signer, payload_bytes)
+        batch_list_bytes = self.create_batch(signer)
+        send_it(batch_list_bytes)
 
     def progress_task(self, args):
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
@@ -131,6 +141,8 @@ class Todo():
 
         # Pack it all up and ship it out
         self.create_transaction(signer, payload_bytes)
+        batch_list_bytes = self.create_batch(signer)
+        send_it(batch_list_bytes)
 
     def edit_task(self, args):
         if not len(args) == 4: # make sure correct number of arguments are present for desired transaction
@@ -159,6 +171,8 @@ class Todo():
 
         # Pack it all up and ship it out
         self.create_transaction(signer, payload_bytes)
+        batch_list_bytes = self.create_batch(signer)
+        send_it(batch_list_bytes)
 
     def increment_sprint(self, args):
         if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
@@ -185,6 +199,8 @@ class Todo():
 
         # Pack it all up and ship it out
         self.create_transaction(signer, payload_bytes)
+        batch_list_bytes = self.create_batch(signer)
+        send_it(batch_list_bytes)
 
     def add_user(self, args):
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
@@ -212,6 +228,8 @@ class Todo():
 
         # Pack it all up and ship it out
         self.create_transaction(signer, payload_bytes)
+        batch_list_bytes = self.create_batch(signer)
+        send_it(batch_list_bytes)
 
     def remove_user(self, args):
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
@@ -239,6 +257,8 @@ class Todo():
 
         # Pack it all up and ship it out
         self.create_transaction(signer, payload_bytes)
+        batch_list_bytes = self.create_batch(signer)
+        send_it(batch_list_bytes)
 
     def create_transaction(self, signer, payload_bytes):
         txn_header_bytes = TransactionHeader(
@@ -296,6 +316,29 @@ class Todo():
         
         return batch_list_bytes
 
+    def print_project(self, args):
+        if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
+            print("\nIncorrect number of arguments for desired command.\n")
+            quit()
+        with urllib.request.urlopen("http://localhost:8008/state") as url:
+            state = json.loads(url.read().decode())['data']
+
+        project_name = args[1]
+        project_node = getProjectNode(state,project_name)
+        print('+++++++++++++++++++++Project:' + project_name + '+++++++++++++++++++++')
+        current_sprint = project_node.current_sprint
+        for sprint in range(0,current_sprint+1):
+            print('=================Sprint '+ str(sprint) + '=================')
+            sprint_node = getSprintNode(state,project_name,sprint)
+            for task_name in sprint_node.task_names:
+                task = getTask(state,project_name,sprint,task_name)
+                print("------------Task------------")
+                print("Task_name: " + task.task_name)
+                print('Description: ' + task.description)
+                print('Progress: ' + task.progress)
+                print('---------------------------')
+            print ("====================================================")
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
 def send_it(batch_list_bytes):
     # ship it out and scrape
@@ -305,10 +348,55 @@ def send_it(batch_list_bytes):
     resp = requests.post(url, data=payload, headers=headers)
     json_url = json.loads(resp.text)
     # print("Batch status link: \n\n" + json_url["link"] + "\n") # DEBUG
-    time.sleep(10)
+    time.sleep(1)
     resp = requests.get(json_url["link"])
     json_batch_status = json.loads(resp.text)
     print(json_batch_status["data"][0]["status"])
+
+def getProjectNode(state,project_name):
+    # make address of project metanode
+    project_node_address = addressing.make_project_node_address(project_name)
+    project_node_container = ProjectNodeContainer()
+    data = getData(state,project_node_address)
+    project_node_container.ParseFromString(data)  # decode data and store in container
+
+    for project_node in project_node_container.entries:  # find project with correct name
+        if project_node.project_name == project_name:
+            return project_node
+    return None
+
+def getSprintNode(state,project_name,sprint):
+    # make address of project metanode
+    sprint_node_address = addressing.make_sprint_node_address(project_name, str(sprint))
+    sprint_node_container = SprintNodeContainer()
+    data = getData(state,sprint_node_address)
+    sprint_node_container.ParseFromString(data)  # decode data and store in container
+
+    for sprint_node in sprint_node_container.entries:  # find project with correct name
+        if sprint_node.project_name == project_name:
+            return sprint_node
+    return None
+
+def getTask(state,project_name,sprint,task_name):
+    # make address of project metanode
+    task_address = addressing.make_task_address(project_name,sprint,task_name)
+    task_container = TaskContainer()
+    data = getData(state,task_address)
+    task_container.ParseFromString(data)  # decode data and store in container
+
+    for task in task_container.entries:  # find project with correct name
+        if task.task_name == task_name:
+            return task
+    return None
+
+def getData(state, address):
+    for location in state:
+        if location['address'] == address:
+            encoded_data = location['data']
+            return base64.b64decode(encoded_data)
+    return None
+
+
 
 #subprocess.run(["docker-compose", "-f" "../sawtooth-default.yaml", "up", "-d"])
 
@@ -322,8 +410,5 @@ args[1] = _create_signer(priv_key)
 
 # run desired function
 getattr(todo, args[0])(args[1:])
-
-batch_list_bytes = todo.create_batch(args[1])
-send_it(batch_list_bytes)
 
 #subprocess.run(["docker-compose", "-f" "../sawtooth-default.yaml", "down"])
