@@ -53,7 +53,7 @@ class Todo():
     def create_project(self, args):
         if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
-            return
+            quit()
 
         #create signer using given private key
         private_key = args[0]
@@ -79,7 +79,7 @@ class Todo():
     def create_task(self, args):
         if not len(args) == 4: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
-            return
+            quit()
 
         #create signer using given private key
         private_key = args[0]
@@ -88,7 +88,7 @@ class Todo():
         # bundle the action information
         action = CreateTaskAction(
                 project_name = args[1],
-                name = args[2],
+                task_name = args[2],
                 description = args[3]
         )
         # bundle the payload
@@ -107,7 +107,7 @@ class Todo():
     def progress_task(self, args):
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
-            return
+            quit()
 
         #create signer using given private key
         private_key = args[0]
@@ -116,7 +116,7 @@ class Todo():
         # bundle the action information
         action = ProgressTaskAction(
                 project_name=args[1],
-                name=args[2],
+                task_name=args[2],
         )
         # bundle the payload
         payload = Payload(
@@ -134,7 +134,7 @@ class Todo():
     def edit_task(self, args):
         if not len(args) == 4: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
-            return
+            quit()
 
         #create signer using given private key
         private_key = args[0]
@@ -143,7 +143,7 @@ class Todo():
         # bundle the action information
         action = EditTaskAction(
                 project_name = args[1],
-                name = args[2],
+                task_name = args[2],
                 description = args[3]
         )
         # bundle the payload
@@ -162,7 +162,7 @@ class Todo():
     def increment_sprint(self, args):
         if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
-            return
+            quit()
 
         #create signer using given private key
         private_key = args[0]
@@ -188,7 +188,7 @@ class Todo():
     def add_user(self, args):
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
-            return
+            quit()
 
         #create signer using given private key
         private_key = args[0]
@@ -215,7 +215,7 @@ class Todo():
     def remove_user(self, args):
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
-            return
+            quit()
 
         #create signer using given private key
         private_key = args[0]
