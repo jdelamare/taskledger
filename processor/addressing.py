@@ -18,7 +18,7 @@ def make_task_address(project_name,sprint,task_name):
         + TODO_TASK
         + _hash(project_name)[:47]
         + sprint
-        + _hash(task_name)
+        + _hash(task_name)[:14]
     )
 
 def make_project_node_address(project_name):
@@ -35,6 +35,6 @@ def make_sprint_node_address(project_name,sprint):
         + SPRINT_METANODE
         + _hash(project_name)[:47]
         + sprint
-        + ('0'*13)
+        + ('0'*14)
     )
 

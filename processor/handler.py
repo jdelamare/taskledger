@@ -119,7 +119,7 @@ def _create_task(payload, signer, timestamp, state):
 """ creating a project involves creating a first sprint"""
 def _create_project(payload, signer, timestamp, state):
     # raise InvalidTransaction('this is not working')
-    FIRST_SPRINT = 0
+    FIRST_SPRINT = '0'
     # check for complete payload
     if not payload.project_name:
         raise InvalidTransaction(
@@ -141,7 +141,7 @@ def _create_project(payload, signer, timestamp, state):
     project_node = ProjectNode(
         project_name = payload.project_name,
         public_keys = [signer], #add creator of project to authorized public key list
-        current_sprint = FIRST_SPRINT)
+        current_sprint = int(FIRST_SPRINT))
 
     #add project to container
     project_container.entries.extend([project_node])
