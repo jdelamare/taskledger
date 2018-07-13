@@ -451,7 +451,6 @@ def _get_sprint_node(state, project_name,sprint):
     # get the current projects
     sprint_container = _get_container(state, sprint_node_address)
 
-
     for sprint_node_temp in sprint_container.entries:  # find project with correct name
         if sprint_node_temp.project_name == project_name:
             return sprint_node_temp
