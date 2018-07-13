@@ -300,56 +300,66 @@ def _increment_sprint(payload, signer, timestamp, state):
 
 # add a public key to the list of those allowed to edit the project
 def _add_user(payload, signer, timestamp, state):
+    ''' Adds a public key to the list of authorized keys in the project metanode
+
+        Payload should include project name and the new public key
+        Transaction must be signed by project owner (0th element of authorized keys list)
+    '''
+    # invalidate transactions with incomplete payloads
     if not payload.project_name:
         raise InvalidTransaction(
             "a project name must be provided")
-
     if not payload.public_key:
         raise InvalidTransaction(
             "a pk must be provided")
-
+    # check if transaction was signed using owner's public key
     _verify_owner(state,signer, payload.project_name)
-
-    address = addressing.make_project_node_address(payload.project_name)
-    container = _get_container(state, address)
-    
+    # make project node address of given project name
+    project_node_address = addressing.make_project_node_address(payload.project_name)
+    # get project node container from state
+    project_node_container = _get_container(state, project_node_address)
     project_node = None
-    
+    # find project with correct name
     for entry in container.entries:
         if entry.project_name == payload.project_name:
             project_node = entry
-    # verify user is legit
+    # invalidate transactions that try to add keys already in the list
     if any(public_key == payload.public_key
         for public_key in project_node.public_keys):
         raise InvalidTransaction(
             "This user's public key is already registered")
-            
+    # add the key to the authorized keys list
     project_node.public_keys.extend([payload.public_key])
-
+    # set the state with the new authorized keys list
     _set_container(state, address, container)
 
 
-# remove a public key from the list of those allowed to edit the project
 def _remove_user(payload, signer, timestamp, state):
+    ''' Removes a public key from the list of authorized keys in the project metanode
+
+        Payload should include project name and the public key to be removed
+        Transaction must be signed by project owner (0th element of authorized keys list)
+    '''
+    # invalidate transactions with incomplete payloads
     if not payload.project_name:
         raise InvalidTransaction(
             "a project name must be provided")
-
     if not payload.public_key:
         raise InvalidTransaction(
             "a pk must be provided")
-
+    # check if transaction was signed using owner's public key
     _verify_owner(state,signer, payload.project_name)
-
-    address = addressing.make_project_node_address(payload.project_name)
-    container = _get_container(state, address)
-    
+    # make project node address of given project name
+    project_node_address = addressing.make_project_node_address(payload.project_name)
+    # get project node container from state
+    project_node_container = _get_container(state, project_node_address)
     project_node = None 
-
+    # find project with correct name
     for entry in container.entries:
         if entry.project_name == payload.project_name:
             project_node = entry
-    # verify user is legit
+    # invalidate transactions that try to remove keys that are not in the list
+    # and transactions that try to remove the last key in the list
     if not any(public_key == payload.public_key
            for public_key in project_node.public_keys):
         raise InvalidTransaction(
@@ -357,8 +367,9 @@ def _remove_user(payload, signer, timestamp, state):
     if len(project_node.public_keys) < 2:
         raise InvalidTransaction(
             "Cannot remove all public keys from a project")
+    # remove the key from the authorized keys list
     project_node.public_keys.remove(payload.public_key)
-
+    # set the state with the new authorized keys list
     _set_container(state, address, container)
 
 def _unpack_transaction(transaction, state):
@@ -367,47 +378,52 @@ def _unpack_transaction(transaction, state):
     handler function (with the latter two determined by the constant
     TYPE_TO_ACTION_HANDLER table.
     '''
-
-    # identify who signed the transaction 
+    # public key used to sign the transaction
     signer = transaction.header.signer_public_key
-
     # create an empty Payload object defined in protos/payload.proto
-    payload_header = Payload()
-    
-    # convert from the binary format
-    payload_header.ParseFromString(transaction.payload)
-
-    # define the desired action indicated by the payload
+    payload_wrapper = Payload()
+    # decode the payload from the binary format
+    payload_wrapper.ParseFromString(transaction.payload)
+    # define the desired action type indicated by the payload
     action = payload_header.action
-
-    # define the desired timestamp indicated by the payload
     timestamp = payload_header.timestamp
-
+    # used to determine which handler function should be used on a certain type of payload
+    TYPE_TO_ACTION_HANDLER = {
+        Payload.CREATE_PROJECT: ('create_project', _create_project),
+        Payload.CREATE_TASK: ('create_task', _create_task),
+        Payload.PROGRESS_TASK: ('progress_task', _progress_task),
+        Payload.EDIT_TASK: ('edit_task', _edit_task),
+        Payload.INCREMENT_SPRINT: ('increment_sprint', _increment_sprint),
+        Payload.ADD_USER: ('add_user', _add_user),
+        Payload.REMOVE_USER: ('remove_user', _remove_user),
+    }
     try:
-        # using a dictionary, dynamically choose the function we'd like
-        # 'create_agent', _create_agent
+        # get the correct payload field and handler function from the action type
         attribute, handler = TYPE_TO_ACTION_HANDLER[action]
     except KeyError:
         raise Exception('Specified action is invalid')
-
-    # view docs on getattr(x,x)
-    # view protos/payload.proto this makes a CreateAgentAction object
-    payload = getattr(payload_header, attribute)
-
+    # extract the correct payload based on the action type
+    payload = getattr(payload_wrapper, attribute)
     # go back to apply
     return signer, timestamp, payload, handler
 
 
-def _get_container(state, address):
-    tag = address[6:8] # tag bits that designate the type of node
 
+
+def _get_container(state, address):
+    '''Returns the container at a given address from state'''
+    # tag bits that designate the type of node (task/project metanode/sprint metanode)
+    tag = address[6:8]
+    # translate the tag bits to the correct type of container for the node
     containers = {
         addressing.PROJECT_METANODE : ProjectNodeContainer,
         addressing.SPRINT_METANODE : SprintNodeContainer,
         addressing.TODO_TASK : TaskContainer,
     }
-    container = containers[tag]() #initialize the correct type of container based on the tag
-    entries = state.get_state([address]) # get the state using the address
+    # initialize the correct type of container based on
+    container = containers[tag]()
+    # get the state at the given address
+    entries = state.get_state([address])
 
     if entries:
         data = entries[0].data          # extract the data from the state
@@ -417,6 +433,7 @@ def _get_container(state, address):
 
 
 def _set_container(state, address, container):
+    '''Sets the state at a certain address to a given container'''
     try:
         addresses = state.set_state({
         address: container.SerializeToString()
@@ -430,66 +447,66 @@ def _set_container(state, address, container):
 
 
 def _get_project_node(state, project_name):
+    '''Returns project metanode of give project name'''
     # make address of project metanode
     project_node_address = addressing.make_project_node_address(project_name)
-
-    # get the current projects
+    # pull the project metanode container from this address
     project_container = _get_container(state, project_node_address)
-
+    # find metanode with correct project name and return it
     for project_node in project_container.entries: #find project with correct name
         if project_node.project_name == project_name:
             return project_node 
-
+    # in the case that no project of this name exists, invalidate the transaction
     raise InvalidTransaction(
         "This project does not exist")
 
 
-def _get_sprint_node(state, project_name,sprint):
-    # make address of project metanode
+def _get_sprint_node(state, project_name, sprint):
+    '''Returns sprint metanode of given project name and sprint number'''
+    # make address of sprint metanode
     sprint_node_address = addressing.make_sprint_node_address(project_name,sprint)
-
-    # get the current projects
+    # pulls the sprint metanode container from this address
     sprint_container = _get_container(state, sprint_node_address)
-
-    for sprint_node_temp in sprint_container.entries:  # find project with correct name
+    # find metanode with correct project name and return it
+    for sprint_node_temp in sprint_container.entries:
         if sprint_node_temp.project_name == project_name:
             return sprint_node_temp
-
     return None
 
 
 def _get_current_sprint_node(state, project_name):
-    project_node = _get_project_node(state,project_name)
-    if project_node:
-        sprint_node = _get_sprint_node(state,project_name, project_node.current_sprint)
-        return sprint_node
-
-    return None
+    '''Returns metanode of current sprint from state'''
+    project_node = _get_project_node(state, project_name)
+    return _get_sprint_node(state, project_name, project_node.current_sprint)
 
 
-def _verify_contributor(state,signer, project_name):
-    # check to see that the signer is in the project node's list of authorized signers
+def _verify_contributor(state, signer, project_name):
+    ''' Checks to see if a public key belongs to an authorized contributor of the project.
+
+        Takes the state provided from the apply function, the public key of the signer,
+        and the name of the project to check.
+        Invalidates the transaction if the public key is not authorized.
+    '''
+    # get list of authorized contributor public keys from project node
     auth_keys = _get_project_node(state,project_name).public_keys
+    # checks if the public key of the signer is in the list
+    # of authorized keys
     if not any(signer == key for key in auth_keys):
         raise InvalidTransaction(
             'Signer not authorized as a contributor')
 
-def _verify_owner(state,signer,project_name):
-    # check to see that the signer is the creator of the project
-    # i.e. they are the first in the list of authorized signers
+
+def _verify_owner(state, signer, project_name):
+    ''' Checks to see if a public key belongs to the creator of the project.
+
+        Takes the state provided from the apply function, the public key of the signer,
+        and the name of the project to check.
+        Invalidates the transaction if the public key does not belong to the project owner.
+    '''
+    # get list of authorized contributor public keys from project node
     auth_keys = _get_project_node(state,project_name).public_keys
+    # checks if the public key of the signer is the first element
+    # of authorized keys (the project owner's key)
     if not signer == auth_keys[0]:
         raise InvalidTransaction(
             'Signer not authorized as an owner')
-
-
-
-TYPE_TO_ACTION_HANDLER = { 
-    Payload.CREATE_PROJECT: ('create_project', _create_project),
-    Payload.CREATE_TASK: ('create_task', _create_task),
-    Payload.PROGRESS_TASK: ('progress_task', _progress_task),
-    Payload.EDIT_TASK: ('edit_task', _edit_task),
-    Payload.INCREMENT_SPRINT: ('increment_sprint', _increment_sprint),
-    Payload.ADD_USER: ('add_user', _add_user),
-    Payload.REMOVE_USER: ('remove_user', _remove_user),
-} 
