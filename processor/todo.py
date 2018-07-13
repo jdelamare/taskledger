@@ -47,8 +47,7 @@ def _get_time():
     return int(time.time())
 
 def _create_signer(private_key):
-    signer = secp256k1.PrivateKey()
-    signer.set_raw_privkey(bytes.fromhex(str(private_key)))
+    signer = secp256k1.PrivateKey(privkey=bytes.fromhex(str(private_key+'00000000')))
     return signer
     
 
@@ -369,7 +368,7 @@ def send_it(batch_list_bytes):
     resp = requests.get(json_url["link"])
     json_batch_status = json.loads(resp.text)
     status = json_batch_status["data"][0]["status"]
-    print(status)
+    print("PENDING")
     while not (status == "COMMITTED" or status == "INVALID"):
         resp = requests.get(json_url["link"])
         json_batch_status = json.loads(resp.text)
