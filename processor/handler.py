@@ -68,13 +68,13 @@ class SkltnTransactionHandler(TransactionHandler):
 
 # Handler functions
 
-""" Creates a project node and initializes the first sprint node.
-
-    Takes the project name and makes an address given the METANODE tag 
-    that name, and the txn family.  A project name must be unique, the 
-    txn will fail if it is not.  
-"""
 def _create_project(payload, signer, timestamp, state):
+    ''' Creates a project node and initializes the first sprint node.
+
+        Takes the project name and makes an address given the METANODE tag 
+        that name, and the txn family.  A project name must be unique, the 
+        txn will fail if it is not.  
+    '''
     FIRST_SPRINT = '0'
     # check for complete payload
     if not payload.project_name:
@@ -119,13 +119,13 @@ def _create_project(payload, signer, timestamp, state):
     _set_container(state,sprint_node_address,sprint_container)
 
 
-""" Creates a task node and adds the task to the sprint's list of task names
-    
-    Takes a task_name and description.  Makes an address given the task project 
-    name, sprint number, and the task name.  A task name must be unqiue in the 
-    project.  This is checked in the spint node's task_names list.
-"""
 def _create_task(payload, signer, timestamp, state):
+    ''' Creates a task node and adds the task to the sprint's list of task names
+    
+        Takes a task_name and description.  Makes an address given the task project 
+        name, sprint number, and the task name.  A task name must be unqiue in the 
+        project.  This is checked in the spint node's task_names list.
+    '''   
     if not payload.task_name:
         raise InvalidTransaction(
             'Task must have a name.'
@@ -175,12 +175,15 @@ def _create_task(payload, signer, timestamp, state):
     _set_container(state, address, container)
 
 
-""" Progress task moves a task along the four possible stages.
-
-    Takes a project name and a task name to move 
-"""
 def _progress_task(payload, signer, timestamp, state):
-    # check for complete payload
+    ''' Progress task moves a task along the four possible stages.
+
+        Takes a project name and a task name.  The four stages are
+        NOT_STARTED, IN_PROGRESS, TESTING, and DONE.  Moves the 
+        task's stage from its current stage to the next if possible.
+        It is not possible to progress beyond DONE. 
+    '''
+   # check for complete payload
     if not payload.project_name:
         raise InvalidTransaction(
             "a project name must be provided")
@@ -225,6 +228,10 @@ def _edit_task(payload, signer, timestamp, state):
     if not payload.task_name:
         raise InvalidTransaction(
             "a task name must be provided")
+    if not payload.description:
+         raise InvalidTransaction(
+            'Task must have a description.'
+    )
     # verify transaction is signed by authorized key
     _verify_contributor(state,signer, payload.project_name)
     # make task address
