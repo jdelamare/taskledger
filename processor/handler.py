@@ -355,7 +355,9 @@ def _remove_user(payload, signer, timestamp, state):
            for public_key in project_node.public_keys):
         raise InvalidTransaction(
                 "This user's public key is already registered")
-
+    if project_node.public_keys.len < 2:
+        raise InvalidTransaction(
+            "Cannot remove all public keys from a project")
     project_node.public_keys.remove(payload.public_key)
 
     _set_container(state, address, container)
@@ -479,7 +481,7 @@ def _verify_owner(state,signer,project_name):
     auth_keys = _get_project_node(state,project_name).public_keys
     if not signer == auth_keys[0]:
         raise InvalidTransaction(
-            'Signer not authorized as a contributor')
+            'Signer not authorized as an owner')
 
 
 
