@@ -337,6 +337,10 @@ class Todo():
         print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
     def add_password(self, args):
+        ''' Takes authorized signer and new password to be added to auth users.
+            
+            args: [password (is a signer), new_password]
+        '''
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -347,6 +351,10 @@ class Todo():
         self.add_user(args)
 
     def remove_password(self, args):
+        ''' Takes authorized signer and password to be removed from auth users.
+            
+            args: [password (is a signer), removed_password]
+        '''
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -376,6 +384,8 @@ def send_it(batch_list_bytes):
     print(status)
 
 def getProjectNode(state,project_name):
+    ''' Given a project name and sprint name get a sprint node. '''
+
     # make address of project metanode
     project_node_address = addressing.make_project_node_address(project_name)
     project_node_container = ProjectNodeContainer()
@@ -388,7 +398,9 @@ def getProjectNode(state,project_name):
     return None
 
 def getSprintNode(state,project_name,sprint):
-    # make address of project metanode
+    ''' Given a project name and sprint name get a sprint node. '''
+
+    # make address of sprint metanode
     sprint_node_address = addressing.make_sprint_node_address(project_name, str(sprint))
     sprint_node_container = SprintNodeContainer()
     data = getData(state,sprint_node_address)
@@ -400,18 +412,28 @@ def getSprintNode(state,project_name,sprint):
     return None
 
 def getTask(state,project_name,sprint,task_name):
-    # make address of project metanode
+    ''' Given a project name, sprint, and task name get a task node. '''
+
+    # make address of task node
     task_address = addressing.make_task_address(project_name,sprint,task_name)
     task_container = TaskContainer()
     data = getData(state,task_address)
     task_container.ParseFromString(data)  # decode data and store in container
 
-    for task in task_container.entries:  # find project with correct name
+    for task in task_container.entries:  # find task with correct name
         if task.task_name == task_name:
             return task
     return None
 
+
 def getData(state, address):
+    ''' Gets the data from a provided address.
+
+        State has two fields address and data.  We can create the
+        address using functions in addressing.py.  The data field
+        is encoded with base64 encoding.
+    '''
+
     for location in state:
         if location['address'] == address:
             encoded_data = location['data']
