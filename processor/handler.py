@@ -35,7 +35,7 @@ import addressing
 LOGGER = logging.getLogger(__name__)
 
 
-class SkltnTransactionHandler(TransactionHandler):
+class TodoTransactionHandler(TransactionHandler):
     @property
     def family_name(self):
         return addressing.FAMILY_NAME
@@ -46,7 +46,7 @@ class SkltnTransactionHandler(TransactionHandler):
 
     @property
     def namespaces(self):
-        return [addressing.NAMESPACE] # how to determine address prefix
+        return [addressing.NAMESPACE]
 
     def apply(self, transaction, state):
         '''
