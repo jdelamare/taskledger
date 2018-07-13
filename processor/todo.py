@@ -332,7 +332,7 @@ class Todo():
                 print("------------Task------------")
                 print("Task_name: " + task.task_name)
                 print('Description: ' + task.description)
-                print('Progress: ' + task.progress)
+                print('Progress: ' + str(task.progress))
                 print('---------------------------')
             print ("====================================================")
         print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
@@ -341,20 +341,20 @@ class Todo():
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
-            #creates public key from password
-            new_pass = args[2]
-            priv_key = hashlib.sha224(new_pass.encode('utf-8')).hexdigest()
-            args[2] = _create_signer(priv_key).pubkey.serialize().hex()
+        #creates public key from password
+        new_pass = args[2]
+        priv_key = hashlib.sha224(new_pass.encode('utf-8')).hexdigest()
+        args[2] = _create_signer(priv_key).pubkey.serialize().hex()
         self.add_user(args)
 
     def remove_password(self, args):
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
-            #creates public key from password
-            new_pass = args[2]
-            priv_key = hashlib.sha224(new_pass.encode('utf-8')).hexdigest()
-            args[2] = _create_signer(priv_key).pubkey.serialize().hex()
+        #creates public key from password
+        new_pass = args[2]
+        priv_key = hashlib.sha224(new_pass.encode('utf-8')).hexdigest()
+        args[2] = _create_signer(priv_key).pubkey.serialize().hex()
         self.remove_user(args)
 
 
@@ -366,10 +366,15 @@ def send_it(batch_list_bytes):
     resp = requests.post(url, data=payload, headers=headers)
     json_url = json.loads(resp.text)
     # print("Batch status link: \n\n" + json_url["link"] + "\n") # DEBUG
-    time.sleep(1)
     resp = requests.get(json_url["link"])
     json_batch_status = json.loads(resp.text)
-    print(json_batch_status["data"][0]["status"])
+    status = json_batch_status["data"][0]["status"]
+    print(status)
+    while not (status == "COMMITTED" or status == "INVALID"):
+        resp = requests.get(json_url["link"])
+        json_batch_status = json.loads(resp.text)
+        status = json_batch_status["data"][0]["status"]
+    print(status)
 
 def getProjectNode(state,project_name):
     # make address of project metanode

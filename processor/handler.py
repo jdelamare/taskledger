@@ -99,7 +99,7 @@ def _create_task(payload, signer, timestamp, state):
             if any(task == payload.task_name for task in sprint_node.task_names):
                 raise InvalidTransaction(
                     "This task name is already in use.")
-            sprint_node.task_names.extend([payload.project_name])
+            sprint_node.task_names.extend([payload.task_name])
 
             _set_container(state, sprint_address, sprint_container)
 
@@ -176,7 +176,7 @@ def _progress_task(payload, signer, timestamp, state):
         raise InvalidTransaction(
             "a task name must be provided")
     # verify transaction is signed by authorized key
-    _verify_contributor(signer, payload.project_name)
+    _verify_contributor(state,signer, payload.project_name)
 
     # make task address
     task_address = addressing.make_task_address(payload.project_name,
@@ -214,7 +214,7 @@ def _edit_task(payload, signer, timestamp, state):
         raise InvalidTransaction(
             "a task name must be provided")
     # verify transaction is signed by authorized key
-    _verify_contributor(signer, payload.project_name)
+    _verify_contributor(state,signer, payload.project_name)
     # make task address
     task_address = addressing.make_task_address(payload.project_name,
                                                 _get_project_node(payload.project_name).current_sprint,
@@ -243,7 +243,7 @@ def _increment_sprint(payload, signer, timestamp, state):
         raise InvalidTransaction(
             "a project name must be provided")
     # verify transaction is signed by authorized key
-    _verify_contributor(signer, payload.project_name)
+    _verify_contributor(state,signer, payload.project_name)
 
     # find the current sprint number
     current_sprint = _get_project_node(state, payload.project_name).current_sprint
