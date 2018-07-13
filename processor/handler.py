@@ -67,6 +67,64 @@ class SkltnTransactionHandler(TransactionHandler):
 
 
 # Handler functions
+
+""" Creates a project node and initializes the first sprint node.
+
+    Takes the project name and makes an address given the METANODE tag 
+    that name, and the txn family.  A project name must be unique, the 
+    txn will fail if it is not.  
+"""
+def _create_project(payload, signer, timestamp, state):
+    FIRST_SPRINT = '0'
+    # check for complete payload
+    if not payload.project_name:
+        raise InvalidTransaction(
+            "Project must have a name")
+
+    project_address = addressing.make_project_node_address(payload.project_name)
+    project_container = _get_container(state,project_address)
+
+    if not project_container: #if no container exists, create one
+        project_container = ProjectNodeContainer(entries=[])
+
+    #check to see if a project already exists under the same name
+    if any(project_node.project_name == payload.project_name
+        for project_node in project_container.entries):
+            raise InvalidTransaction(
+                'Project with this name already exists.')
+
+    # create the metanode protobuf object
+    project_node = ProjectNode(
+        project_name = payload.project_name,
+        public_keys = [signer], #add creator of project to authorized public key list
+        current_sprint = int(FIRST_SPRINT))
+
+    #add project to container
+    project_container.entries.extend([project_node])
+    #set state with new project included
+    _set_container(state,project_address,project_container)
+
+    # initialize first sprint node
+    sprint_node_address = addressing.make_sprint_node_address(payload.project_name, FIRST_SPRINT)
+    sprint_container = _get_container(state, sprint_node_address)
+
+    if not sprint_container:  # if no container exists, create one
+        sprint_container = SprintNodeContainer(entries=[])
+    
+    sprint_node = SprintNode(
+        project_name=payload.project_name,
+        task_names=[])
+    
+    sprint_container.entries.extend([sprint_node])
+    _set_container(state,sprint_node_address,sprint_container)
+
+
+""" Creates a task node and adds the task to the sprint's list of task names
+    
+    Takes a task_name and description.  Makes an address given the task project 
+    name, sprint number, and the task name.  A task name must be unqiue in the 
+    project.  This is checked in the spint node's task_names list.
+"""
 def _create_task(payload, signer, timestamp, state):
     if not payload.task_name:
         raise InvalidTransaction(
@@ -112,61 +170,15 @@ def _create_task(payload, signer, timestamp, state):
  
     # create the task
     address = addressing.make_task_address(payload.project_name, current_sprint, payload.task_name)
-
     container = _get_container(state, address)
-
     container.entries.extend([task])       
-
     _set_container(state, address, container)
 
-""" creating a project involves creating a first sprint"""
-def _create_project(payload, signer, timestamp, state):
-    # raise InvalidTransaction('this is not working')
-    FIRST_SPRINT = '0'
-    # check for complete payload
-    if not payload.project_name:
-        raise InvalidTransaction(
-            "Project must have a name")
 
-    project_address = addressing.make_project_node_address(payload.project_name)
-    project_container = _get_container(state,project_address)
+""" Progress task moves a task along the four possible stages.
 
-    if not project_container: #if no container exists, create one
-        project_container = ProjectNodeContainer(entries=[])
-
-    #check to see if a project already exists under the same name
-    if any(project_node.project_name == payload.project_name
-        for project_node in project_container.entries):
-            raise InvalidTransaction(
-                'Project with this name already exists.')
-
-    # create the metanode protobuf object
-    project_node = ProjectNode(
-        project_name = payload.project_name,
-        public_keys = [signer], #add creator of project to authorized public key list
-        current_sprint = int(FIRST_SPRINT))
-
-    #add project to container
-    project_container.entries.extend([project_node])
-    #set state with new project included
-    _set_container(state,project_address,project_container)
-
-    # initialize first sprint node
-    sprint_node_address = addressing.make_sprint_node_address(payload.project_name, FIRST_SPRINT)
-    sprint_container = _get_container(state, sprint_node_address)
-
-    if not sprint_container:  # if no container exists, create one
-        sprint_container = SprintNodeContainer(entries=[])
-    
-    sprint_node = SprintNode(
-        project_name=payload.project_name,
-        task_names=[])
-    
-    sprint_container.entries.extend([sprint_node])
-    
-    _set_container(state,sprint_node_address,sprint_container)
-
-
+    Takes a project name and a task name to move 
+"""
 def _progress_task(payload, signer, timestamp, state):
     # check for complete payload
     if not payload.project_name:
@@ -350,11 +362,17 @@ def _remove_user(payload, signer, timestamp, state):
         if entry.project_name == payload.project_name:
             project_node = entry
 
+    print("*************************************************")
+    
     # verify user is legit
     if not any(public_key == payload.public_key
            for public_key in project_node.public_keys):
         raise InvalidTransaction(
-                "This user's public key is already registered")
+                "This user's public key has not been registered")
+
+    if payload.public_key == project_node.public_keys[0]:
+        raise InvalidTransaction(
+                "Cannot remove the owner's public key")
 
     project_node.public_keys.remove(payload.public_key)
 
