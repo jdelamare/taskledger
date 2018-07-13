@@ -56,6 +56,10 @@ class Todo():
         self.txns = []
 
     def create_project(self, args):
+        ''' Creates a transaction that includes a create_project payload
+
+            args: [password/signer, project_name]
+        '''
         if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -84,6 +88,10 @@ class Todo():
         send_it(batch_list_bytes)
 
     def create_task(self, args):
+        ''' Creates a transaction that includes a create_task payload
+
+            args: [password/signer, project_name, task_name, description]
+        '''
         if not len(args) == 4: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -114,6 +122,10 @@ class Todo():
         send_it(batch_list_bytes)
 
     def progress_task(self, args):
+        ''' Creates a transaction that includes a progress_task payload
+
+            args: [password/signer, project_name, task_name]
+        '''
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -142,6 +154,10 @@ class Todo():
         send_it(batch_list_bytes)
 
     def edit_task(self, args):
+        ''' Creates a transaction that includes a create_project payload
+
+            args: [password/signer, project_name, task_name, description]
+        '''
         if not len(args) == 4: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -170,6 +186,10 @@ class Todo():
         send_it(batch_list_bytes)
 
     def increment_sprint(self, args):
+        ''' Creates a transaction that includes an increment_sprint payload
+
+            args: [password/signer, project_name]
+        '''
         if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -197,6 +217,10 @@ class Todo():
         send_it(batch_list_bytes)
 
     def add_user(self, args):
+        ''' Creates a transaction that includes an add_user payload
+
+            args: [password/signer, project_name, public_key]
+        '''
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -225,6 +249,10 @@ class Todo():
         send_it(batch_list_bytes)
 
     def remove_user(self, args):
+        ''' Creates a transaction that includes a remove_user payload
+
+            args: [password/signer, project_name, public_key]
+        '''
         if not len(args) == 3: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
@@ -253,6 +281,7 @@ class Todo():
         send_it(batch_list_bytes)
 
     def create_transaction(self, signer, payload_bytes):
+        '''Bundles together a transaction that includes the given payload and is signed by given signer'''
         txn_header_bytes = TransactionHeader(
             family_name='todo',
             family_version='0.1',
@@ -286,9 +315,8 @@ class Todo():
 
         self.txns.append(txn)
 
-    def create_batch(self, signer):   # args [create_batch, private_key]
-        #signer = _create_signer(private_key)
-
+    def create_batch(self, signer):
+        '''Bundles together a batch that includes self.txns and is signed by given signer'''
         batch_header_bytes = BatchHeader(
             signer_public_key = signer.pubkey.serialize().hex(),
             transaction_ids=[txn.header_signature for txn in self.txns],
@@ -309,20 +337,27 @@ class Todo():
         return batch_list_bytes
 
     def print_project(self, args):
+        ''' Prints all information about a given project
+
+            args: [password (not validated; can be anything), project_name]
+        '''
         if not len(args) == 2: # make sure correct number of arguments are present for desired transaction
             print("\nIncorrect number of arguments for desired command.\n")
             quit()
+        # queries state
         with urllib.request.urlopen("http://localhost:8008/state") as url:
             state = json.loads(url.read().decode())['data']
-
         project_name = args[1]
+        # gets project node from state
         project_node = getProjectNode(state,project_name)
         print('+++++++++++++++++++++Project:' + project_name + '+++++++++++++++++++++')
         print("<<<<<<<<<<<<Public Keys:>>>>>>>>>>>>")
-        for pk in project_node.public_keys:
-            print(pk)
+        # print all authorized public keys
+        for public_key in project_node.public_keys:
+            print(public_key)
         print("<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>")
         current_sprint = project_node.current_sprint
+        # print all sprints and tasks in the sprints
         for sprint in range(0,current_sprint+1):
             print('=================Sprint '+ str(sprint) + '=================')
             sprint_node = getSprintNode(state,project_name,sprint)
@@ -366,6 +401,7 @@ class Todo():
 
 
 def send_it(batch_list_bytes):
+    '''Sends batch to REST API where it'''
     # ship it out and scrape
     url = "http://localhost:8008/batches"
     headers = { 'Content-Type' : 'application/octet-stream' }
