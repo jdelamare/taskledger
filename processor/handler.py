@@ -221,6 +221,12 @@ def _progress_task(payload, signer, timestamp, state):
 
 
 def _edit_task(payload, signer, timestamp, state):
+    ''' Edit a task's description is things change.
+
+        Takes a project name, task name, and task description.
+        Only an authorized contributor can make changes, and 
+        the project/task must exist.
+    '''
     # check for complete payload
     if not payload.project_name:
         raise InvalidTransaction(
@@ -257,6 +263,15 @@ def _edit_task(payload, signer, timestamp, state):
 
 
 def _increment_sprint(payload, signer, timestamp, state):
+    ''' Increases the sprint number and creates new sprint node
+        
+        The first sprint is initialized by the create_project
+        function, but all others must be created using this 
+        function.  A project name must be provided, and the txn
+        must be signed by an authorized contributor.  Sprint nodes
+        contain a list of task names.  The members of this list
+        will only be copied over if the stage is not DONE.
+    '''
     # check for complete payload
     if not payload.project_name:
         raise InvalidTransaction(
