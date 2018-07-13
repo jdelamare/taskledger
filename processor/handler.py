@@ -180,7 +180,7 @@ def _progress_task(payload, signer, timestamp, state):
 
     # make task address
     task_address = addressing.make_task_address(payload.project_name,
-                                                _get_project_node(payload.project_name).current_sprint,
+                                                _get_project_node(state,payload.project_name).current_sprint,
                                                 payload.task_name)
     # get the container with tasks at this address
     task_container = _get_container(state, task_address)
@@ -217,7 +217,7 @@ def _edit_task(payload, signer, timestamp, state):
     _verify_contributor(state,signer, payload.project_name)
     # make task address
     task_address = addressing.make_task_address(payload.project_name,
-                                                _get_project_node(payload.project_name).current_sprint,
+                                                _get_project_node(state,payload.project_name).current_sprint,
                                                 payload.task_name)
     # get the container with tasks at this address
     task_container = _get_container(state,task_address)
@@ -347,7 +347,7 @@ def _remove_user(payload, signer, timestamp, state):
     project_node = None 
 
     for entry in container.entries:
-        if entry.task_name == payload.project_name:
+        if entry.project_name == payload.project_name:
             project_node = entry
 
     # verify user is legit
@@ -488,7 +488,7 @@ TYPE_TO_ACTION_HANDLER = {
     Payload.CREATE_TASK: ('create_task', _create_task),
     Payload.PROGRESS_TASK: ('progress_task', _progress_task),
     Payload.EDIT_TASK: ('edit_task', _edit_task),
-    Payload.INCREMENT_SPRINT: ('increment_sprint', _create_project),
+    Payload.INCREMENT_SPRINT: ('increment_sprint', _increment_sprint),
     Payload.ADD_USER: ('add_user', _add_user),
     Payload.REMOVE_USER: ('remove_user', _remove_user),
 } 
