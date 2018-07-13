@@ -246,7 +246,8 @@ def _increment_sprint(payload, signer, timestamp, state):
     _verify_contributor(state,signer, payload.project_name)
 
     # find the current sprint number
-    current_sprint = _get_project_node(state, payload.project_name).current_sprint
+    project_node = _get_project_node(state, payload.project_name)
+    current_sprint = project_node.current_sprint
     # get past task names list from previous sprint node
     task_names = _get_current_sprint_node(state, payload.project_name).task_names
     # new list of unfinished tasks to be transferred
@@ -316,8 +317,7 @@ def _add_user(payload, signer, timestamp, state):
     
     for entry in container.entries:
         if entry.project_name == payload.project_name:
-            project_node = entry 
-
+            project_node = entry
     # verify user is legit
     if any(public_key == payload.public_key
         for public_key in project_node.public_keys):
@@ -349,13 +349,12 @@ def _remove_user(payload, signer, timestamp, state):
     for entry in container.entries:
         if entry.project_name == payload.project_name:
             project_node = entry
-
     # verify user is legit
     if not any(public_key == payload.public_key
            for public_key in project_node.public_keys):
         raise InvalidTransaction(
-                "This user's public key is already registered")
-    if project_node.public_keys.len < 2:
+                "This user's public key is not registered")
+    if len(project_node.public_keys) < 2:
         raise InvalidTransaction(
             "Cannot remove all public keys from a project")
     project_node.public_keys.remove(payload.public_key)
@@ -441,7 +440,8 @@ def _get_project_node(state, project_name):
         if project_node.project_name == project_name:
             return project_node 
 
-    return None 
+    raise InvalidTransaction(
+        "This project does not exist")
 
 
 def _get_sprint_node(state, project_name,sprint):

@@ -369,7 +369,7 @@ def send_it(batch_list_bytes):
     resp = requests.get(json_url["link"])
     json_batch_status = json.loads(resp.text)
     status = json_batch_status["data"][0]["status"]
-    print(status)
+    print("PENDING")
     while not (status == "COMMITTED" or status == "INVALID"):
         resp = requests.get(json_url["link"])
         json_batch_status = json.loads(resp.text)
