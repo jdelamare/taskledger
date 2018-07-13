@@ -47,8 +47,7 @@ def _get_time():
     return int(time.time())
 
 def _create_signer(private_key):
-    signer = secp256k1.PrivateKey()
-    signer.set_raw_privkey(bytes.fromhex(str(private_key)))
+    signer = secp256k1.PrivateKey(privkey=bytes.fromhex(str(private_key+'00000000')))
     return signer
     
 
