@@ -1,17 +1,27 @@
-''' to use this test one must already know the private key.  on the cli
-input usr0_prv_key, usr1_prv_key, or usr2_prv_key.  This distinction would
-exist depending on who holds keys and has access to the form from which a 
-transaction is created.  
-
-When testing, create_agent should be run with one of the aforementioned 
-users, then we can see if assets can be created and touched repeatedly.
-
-It can also be seen that a bogus private key is the default case when an
-invalid input is provided from the cli. We'd like to see that not every 
-user can touch an asset.'''
-
+# MIT License
+#
+# Copyright (c) 2018 Nicholas Springer & Jeffrey De La Mare
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 # Utilities
+
 import hashlib
 import subprocess
 import sys
