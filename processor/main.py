@@ -19,13 +19,15 @@ import os
 import sys
 import pkg_resources
 import handler
+import traceback
 
 from colorlog import ColoredFormatter
 
 from sawtooth_sdk.processor.core import TransactionProcessor
-from handler import SkltnTransactionHandler
+from handler import TodoTransactionHandler
 
-DISTRIBUTION_NAME = 'skltn'
+DISTRIBUTION_NAME = 'todo'
+
 
 
 def create_console_handler(verbose_level):
@@ -107,7 +109,7 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
 
     processor = TransactionProcessor(url=args.endpoint)
 
-    handler = SkltnTransactionHandler()
+    handler = TodoTransactionHandler()
 
     processor.add_handler(handler)
 
@@ -116,6 +118,6 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
     try:
         processor.start()
     except Exception as err:
-        print(err)
+        traceback.print_exc()
         print("Error. Stopping processor....")
         processor.stop()

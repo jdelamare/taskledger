@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='payload.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\rpayload.proto\"\xa6\x03\n\x07Payload\x12\x1f\n\x06\x61\x63tion\x18\x01 \x01(\x0e\x32\x0f.Payload.Action\x12\x11\n\ttimestamp\x18\x02 \x01(\x04\x12,\n\x0e\x63reate_project\x18\x03 \x01(\x0b\x32\x14.CreateProjectAction\x12&\n\x0b\x63reate_item\x18\x04 \x01(\x0b\x32\x11.CreateItemAction\x12\"\n\tedit_item\x18\x05 \x01(\x0b\x32\x0f.EditItemAction\x12\x30\n\x10increment_sprint\x18\x06 \x01(\x0b\x32\x16.IncrementSprintAction\x12 \n\x08\x61\x64\x64_user\x18\x07 \x01(\x0b\x32\x0e.AddUserAction\x12&\n\x0bremove_user\x18\x08 \x01(\x0b\x32\x11.RemoveUserAction\"q\n\x06\x41\x63tion\x12\x12\n\x0e\x43REATE_PROJECT\x10\x00\x12\x0f\n\x0b\x43REATE_ITEM\x10\x01\x12\r\n\tEDIT_ITEM\x10\x02\x12\x14\n\x10INCREMENT_SPRINT\x10\x03\x12\x0c\n\x08\x41\x44\x44_USER\x10\x04\x12\x0f\n\x0bREMOVE_USER\x10\x05\"+\n\x13\x43reateProjectAction\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\"\x12\n\x10\x43reateItemAction\"\x10\n\x0e\x45\x64itItemAction\"\x17\n\x15IncrementSprintAction\"\x0f\n\rAddUserAction\"\x12\n\x10RemoveUserActionb\x06proto3')
+  serialized_pb=_b('\n\rpayload.proto\"\xe6\x03\n\x07Payload\x12\x1f\n\x06\x61\x63tion\x18\x01 \x01(\x0e\x32\x0f.Payload.Action\x12\x11\n\ttimestamp\x18\x02 \x01(\x04\x12,\n\x0e\x63reate_project\x18\x03 \x01(\x0b\x32\x14.CreateProjectAction\x12&\n\x0b\x63reate_task\x18\x04 \x01(\x0b\x32\x11.CreateTaskAction\x12*\n\rprogress_task\x18\x05 \x01(\x0b\x32\x13.ProgressTaskAction\x12\"\n\tedit_task\x18\x06 \x01(\x0b\x32\x0f.EditTaskAction\x12\x30\n\x10increment_sprint\x18\x07 \x01(\x0b\x32\x16.IncrementSprintAction\x12 \n\x08\x61\x64\x64_user\x18\x08 \x01(\x0b\x32\x0e.AddUserAction\x12&\n\x0bremove_user\x18\t \x01(\x0b\x32\x11.RemoveUserAction\"\x84\x01\n\x06\x41\x63tion\x12\x12\n\x0e\x43REATE_PROJECT\x10\x00\x12\x0f\n\x0b\x43REATE_TASK\x10\x01\x12\x11\n\rPROGRESS_TASK\x10\x02\x12\r\n\tEDIT_TASK\x10\x03\x12\x14\n\x10INCREMENT_SPRINT\x10\x04\x12\x0c\n\x08\x41\x44\x44_USER\x10\x05\x12\x0f\n\x0bREMOVE_USER\x10\x06\"+\n\x13\x43reateProjectAction\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\"P\n\x10\x43reateTaskAction\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\"=\n\x12ProgressTaskAction\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\"N\n\x0e\x45\x64itTaskAction\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\x12\x11\n\ttask_name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\"-\n\x15IncrementSprintAction\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\"9\n\rAddUserAction\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\x12\x12\n\npublic_key\x18\x02 \x01(\t\"<\n\x10RemoveUserAction\x12\x14\n\x0cproject_name\x18\x01 \x01(\t\x12\x12\n\npublic_key\x18\x02 \x01(\tb\x06proto3')
 )
 
 
@@ -35,30 +35,34 @@ _PAYLOAD_ACTION = _descriptor.EnumDescriptor(
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='CREATE_ITEM', index=1, number=1,
+      name='CREATE_TASK', index=1, number=1,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='EDIT_ITEM', index=2, number=2,
+      name='PROGRESS_TASK', index=2, number=2,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='INCREMENT_SPRINT', index=3, number=3,
+      name='EDIT_TASK', index=3, number=3,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='ADD_USER', index=4, number=4,
+      name='INCREMENT_SPRINT', index=4, number=4,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='REMOVE_USER', index=5, number=5,
+      name='ADD_USER', index=5, number=5,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='REMOVE_USER', index=6, number=6,
       options=None,
       type=None),
   ],
   containing_type=None,
   options=None,
-  serialized_start=327,
-  serialized_end=440,
+  serialized_start=372,
+  serialized_end=504,
 )
 _sym_db.RegisterEnumDescriptor(_PAYLOAD_ACTION)
 
@@ -92,36 +96,43 @@ _PAYLOAD = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='create_item', full_name='Payload.create_item', index=3,
+      name='create_task', full_name='Payload.create_task', index=3,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='edit_item', full_name='Payload.edit_item', index=4,
+      name='progress_task', full_name='Payload.progress_task', index=4,
       number=5, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='increment_sprint', full_name='Payload.increment_sprint', index=5,
+      name='edit_task', full_name='Payload.edit_task', index=5,
       number=6, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='add_user', full_name='Payload.add_user', index=6,
+      name='increment_sprint', full_name='Payload.increment_sprint', index=6,
       number=7, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='remove_user', full_name='Payload.remove_user', index=7,
+      name='add_user', full_name='Payload.add_user', index=7,
       number=8, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='remove_user', full_name='Payload.remove_user', index=8,
+      number=9, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -140,7 +151,7 @@ _PAYLOAD = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=18,
-  serialized_end=440,
+  serialized_end=504,
 )
 
 
@@ -170,18 +181,39 @@ _CREATEPROJECTACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=442,
-  serialized_end=485,
+  serialized_start=506,
+  serialized_end=549,
 )
 
 
-_CREATEITEMACTION = _descriptor.Descriptor(
-  name='CreateItemAction',
-  full_name='CreateItemAction',
+_CREATETASKACTION = _descriptor.Descriptor(
+  name='CreateTaskAction',
+  full_name='CreateTaskAction',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='project_name', full_name='CreateTaskAction.project_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='task_name', full_name='CreateTaskAction.task_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='description', full_name='CreateTaskAction.description', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -194,18 +226,32 @@ _CREATEITEMACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=487,
-  serialized_end=505,
+  serialized_start=551,
+  serialized_end=631,
 )
 
 
-_EDITITEMACTION = _descriptor.Descriptor(
-  name='EditItemAction',
-  full_name='EditItemAction',
+_PROGRESSTASKACTION = _descriptor.Descriptor(
+  name='ProgressTaskAction',
+  full_name='ProgressTaskAction',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='project_name', full_name='ProgressTaskAction.project_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='task_name', full_name='ProgressTaskAction.task_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -218,8 +264,53 @@ _EDITITEMACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=507,
-  serialized_end=523,
+  serialized_start=633,
+  serialized_end=694,
+)
+
+
+_EDITTASKACTION = _descriptor.Descriptor(
+  name='EditTaskAction',
+  full_name='EditTaskAction',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='project_name', full_name='EditTaskAction.project_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='task_name', full_name='EditTaskAction.task_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='description', full_name='EditTaskAction.description', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=696,
+  serialized_end=774,
 )
 
 
@@ -230,6 +321,13 @@ _INCREMENTSPRINTACTION = _descriptor.Descriptor(
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='project_name', full_name='IncrementSprintAction.project_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -242,8 +340,8 @@ _INCREMENTSPRINTACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=525,
-  serialized_end=548,
+  serialized_start=776,
+  serialized_end=821,
 )
 
 
@@ -254,6 +352,20 @@ _ADDUSERACTION = _descriptor.Descriptor(
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='project_name', full_name='AddUserAction.project_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='public_key', full_name='AddUserAction.public_key', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -266,8 +378,8 @@ _ADDUSERACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=550,
-  serialized_end=565,
+  serialized_start=823,
+  serialized_end=880,
 )
 
 
@@ -278,6 +390,20 @@ _REMOVEUSERACTION = _descriptor.Descriptor(
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='project_name', full_name='RemoveUserAction.project_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='public_key', full_name='RemoveUserAction.public_key', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -290,22 +416,24 @@ _REMOVEUSERACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=567,
-  serialized_end=585,
+  serialized_start=882,
+  serialized_end=942,
 )
 
 _PAYLOAD.fields_by_name['action'].enum_type = _PAYLOAD_ACTION
 _PAYLOAD.fields_by_name['create_project'].message_type = _CREATEPROJECTACTION
-_PAYLOAD.fields_by_name['create_item'].message_type = _CREATEITEMACTION
-_PAYLOAD.fields_by_name['edit_item'].message_type = _EDITITEMACTION
+_PAYLOAD.fields_by_name['create_task'].message_type = _CREATETASKACTION
+_PAYLOAD.fields_by_name['progress_task'].message_type = _PROGRESSTASKACTION
+_PAYLOAD.fields_by_name['edit_task'].message_type = _EDITTASKACTION
 _PAYLOAD.fields_by_name['increment_sprint'].message_type = _INCREMENTSPRINTACTION
 _PAYLOAD.fields_by_name['add_user'].message_type = _ADDUSERACTION
 _PAYLOAD.fields_by_name['remove_user'].message_type = _REMOVEUSERACTION
 _PAYLOAD_ACTION.containing_type = _PAYLOAD
 DESCRIPTOR.message_types_by_name['Payload'] = _PAYLOAD
 DESCRIPTOR.message_types_by_name['CreateProjectAction'] = _CREATEPROJECTACTION
-DESCRIPTOR.message_types_by_name['CreateItemAction'] = _CREATEITEMACTION
-DESCRIPTOR.message_types_by_name['EditItemAction'] = _EDITITEMACTION
+DESCRIPTOR.message_types_by_name['CreateTaskAction'] = _CREATETASKACTION
+DESCRIPTOR.message_types_by_name['ProgressTaskAction'] = _PROGRESSTASKACTION
+DESCRIPTOR.message_types_by_name['EditTaskAction'] = _EDITTASKACTION
 DESCRIPTOR.message_types_by_name['IncrementSprintAction'] = _INCREMENTSPRINTACTION
 DESCRIPTOR.message_types_by_name['AddUserAction'] = _ADDUSERACTION
 DESCRIPTOR.message_types_by_name['RemoveUserAction'] = _REMOVEUSERACTION
@@ -325,19 +453,26 @@ CreateProjectAction = _reflection.GeneratedProtocolMessageType('CreateProjectAct
   ))
 _sym_db.RegisterMessage(CreateProjectAction)
 
-CreateItemAction = _reflection.GeneratedProtocolMessageType('CreateItemAction', (_message.Message,), dict(
-  DESCRIPTOR = _CREATEITEMACTION,
+CreateTaskAction = _reflection.GeneratedProtocolMessageType('CreateTaskAction', (_message.Message,), dict(
+  DESCRIPTOR = _CREATETASKACTION,
   __module__ = 'payload_pb2'
-  # @@protoc_insertion_point(class_scope:CreateItemAction)
+  # @@protoc_insertion_point(class_scope:CreateTaskAction)
   ))
-_sym_db.RegisterMessage(CreateItemAction)
+_sym_db.RegisterMessage(CreateTaskAction)
 
-EditItemAction = _reflection.GeneratedProtocolMessageType('EditItemAction', (_message.Message,), dict(
-  DESCRIPTOR = _EDITITEMACTION,
+ProgressTaskAction = _reflection.GeneratedProtocolMessageType('ProgressTaskAction', (_message.Message,), dict(
+  DESCRIPTOR = _PROGRESSTASKACTION,
   __module__ = 'payload_pb2'
-  # @@protoc_insertion_point(class_scope:EditItemAction)
+  # @@protoc_insertion_point(class_scope:ProgressTaskAction)
   ))
-_sym_db.RegisterMessage(EditItemAction)
+_sym_db.RegisterMessage(ProgressTaskAction)
+
+EditTaskAction = _reflection.GeneratedProtocolMessageType('EditTaskAction', (_message.Message,), dict(
+  DESCRIPTOR = _EDITTASKACTION,
+  __module__ = 'payload_pb2'
+  # @@protoc_insertion_point(class_scope:EditTaskAction)
+  ))
+_sym_db.RegisterMessage(EditTaskAction)
 
 IncrementSprintAction = _reflection.GeneratedProtocolMessageType('IncrementSprintAction', (_message.Message,), dict(
   DESCRIPTOR = _INCREMENTSPRINTACTION,

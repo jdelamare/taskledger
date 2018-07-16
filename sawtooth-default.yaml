@@ -63,8 +63,8 @@ services:
         \""
 
   processor:
-    image: skltn-tp
-    container_name: skltn-tp
+    image: todo-tp
+    container_name: todo-tp
     build:
       context: processor/
       args:
@@ -72,9 +72,9 @@ services:
         - https_proxy
         - no_proxy
     volumes:
-      - .:/blockchain_skltn
+      - .:/taskledger
     depends_on:
       - shell
       - validator
     entrypoint: |
-      /blockchain_skltn/processor/startup -vv tcp://validator:4004
+      /taskledger/processor/startup -vv tcp://validator:4004
