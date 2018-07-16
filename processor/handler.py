@@ -176,10 +176,10 @@ def _create_task(payload, signer, timestamp, state):
         timestamp = timestamp)
  
     # create the task
-    address = addressing.make_task_address(payload.project_name, current_sprint, payload.task_name)
-    container = _get_container(state, address)
-    container.entries.extend([task])       
-    _set_container(state, address, container)
+    task_address = addressing.make_task_address(payload.project_name, current_sprint, payload.task_name)
+    task_container = _get_container(state, task_address)
+    task_container.entries.extend([task])
+    _set_container(state, task_address, task_container)
 
 
 def _progress_task(payload, signer, timestamp, state):
@@ -361,7 +361,7 @@ def _add_user(payload, signer, timestamp, state):
     project_node_container = _get_container(state, project_node_address)
     project_node = None
     # find project with correct name
-    for entry in container.entries:
+    for entry in project_node_container.entries:
         if entry.project_name == payload.project_name:
             project_node = entry
     # invalidate transactions that try to add keys already in the list
@@ -372,7 +372,7 @@ def _add_user(payload, signer, timestamp, state):
     # add the key to the authorized keys list
     project_node.public_keys.extend([payload.public_key])
     # set the state with the new authorized keys list
-    _set_container(state, address, container)
+    _set_container(state, project_node_address, project_node_container)
 
 
 def _remove_user(payload, signer, timestamp, state):
@@ -396,7 +396,7 @@ def _remove_user(payload, signer, timestamp, state):
     project_node_container = _get_container(state, project_node_address)
     project_node = None 
     # find project with correct name
-    for entry in container.entries:
+    for entry in project_node_container.entries:
         if entry.project_name == payload.project_name:
             project_node = entry
     # invalidate transactions that try to remove keys that are not in the list
@@ -411,7 +411,7 @@ def _remove_user(payload, signer, timestamp, state):
     # remove the key from the authorized keys list
     project_node.public_keys.remove(payload.public_key)
     # set the state with the new authorized keys list
-    _set_container(state, address, container)
+    _set_container(state, project_node_address, project_node_container)
 
 def _unpack_transaction(transaction, state):
     '''Return the transaction signing key, the SCPayload timestamp, the
@@ -426,8 +426,8 @@ def _unpack_transaction(transaction, state):
     # decode the payload from the binary format
     payload_wrapper.ParseFromString(transaction.payload)
     # define the desired action type indicated by the payload
-    action = payload_header.action
-    timestamp = payload_header.timestamp
+    action = payload_wrapper.action
+    timestamp = payload_wrapper.timestamp
     # used to determine which handler function should be used on a certain type of payload
     TYPE_TO_ACTION_HANDLER = {
         Payload.CREATE_PROJECT: ('create_project', _create_project),

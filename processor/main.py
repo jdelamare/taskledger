@@ -24,7 +24,7 @@ import traceback
 from colorlog import ColoredFormatter
 
 from sawtooth_sdk.processor.core import TransactionProcessor
-from handler import SkltnTransactionHandler
+from handler import TodoTransactionHandler
 
 DISTRIBUTION_NAME = 'todo'
 
@@ -109,7 +109,7 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None,
 
     processor = TransactionProcessor(url=args.endpoint)
 
-    handler = SkltnTransactionHandler()
+    handler = TodoTransactionHandler()
 
     processor.add_handler(handler)
 
