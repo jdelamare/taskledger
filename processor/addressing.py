@@ -8,17 +8,15 @@ FAMILY_NAME = 'todo'
 NAMESPACE = _hash(FAMILY_NAME)[:6] # namespace
 
 PROJECT_METANODE = '00' # tag character defines address type
-SPRINT_METANODE = '01'
-TODO_TASK = '02'
+TODO_TASK = '01'
 
 
-def make_task_address(project_name,sprint,task_name):
+def make_task_address(project_name,task_name):
     return (
-        NAMESPACE
-        + TODO_TASK
-        + _hash(project_name)[:47]
-        + str(sprint)
-        + _hash(task_name)[:14]
+        NAMESPACE                   # 6
+        + TODO_TASK                 # 2
+        + _hash(project_name)[:48]  # 48
+        + _hash(task_name)[:14]     # 14
     )
 
 def make_project_node_address(project_name):
@@ -28,13 +26,3 @@ def make_project_node_address(project_name):
         + _hash(project_name)[:47]
         + ('0'*15)
     )
-
-def make_sprint_node_address(project_name,sprint):
-    return (
-        NAMESPACE
-        + SPRINT_METANODE
-        + _hash(project_name)[:47]
-        + str(sprint)
-        + ('0'*14)
-    )
-

@@ -6,9 +6,8 @@ message Payload {
     CREATE_TASK = 1;
     PROGRESS_TASK = 2;
     EDIT_TASK = 3;
-    INCREMENT_SPRINT = 4;
-    ADD_USER = 5;
-    REMOVE_USER = 6;
+    ADD_USER = 4;
+    REMOVE_USER = 5;
   }
 
   // An action tells the handler which function
@@ -24,9 +23,8 @@ message Payload {
   CreateTaskAction create_task = 4;
   ProgressTaskAction progress_task = 5;
   EditTaskAction edit_task = 6;
-  IncrementSprintAction increment_sprint = 7;
-  AddUserAction add_user = 8;
-  RemoveUserAction remove_user = 9;
+  AddUserAction add_user = 7;
+  RemoveUserAction remove_user = 8;
 }
 
 message CreateProjectAction {
@@ -50,10 +48,6 @@ message EditTaskAction {
   string project_name = 1;
   string task_name = 2;
   string description = 3;
-}
-
-message IncrementSprintAction {
-  string project_name = 1;
 }
 
 message AddUserAction {
